@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dataform Slots Optimization — Cheng-Yuan Li</title>
+<meta name="description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dataform Slots Optimization — Cheng-Yuan Li">
+<meta property="og:description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dataform Slots Optimization — Cheng-Yuan Li">
+<meta name="twitter:description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script>window.SITE_ROOT="../";window.SITE_PAGE="dataform-slots";</script>
+<style>
+/* page-local additions — prefixed to avoid collisions with site.css */
+.dfx{--dfx-accent:var(--green,#5df29a);--dfx-warn:var(--red,#ff6b6b);--dfx-line:rgba(255,255,255,.10);--dfx-panel:rgba(255,255,255,.03)}
+.dfx h3{font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:34px 0 12px;opacity:.65;font-weight:500}
+.dfx h3:first-child{margin-top:0}
+.dfx h4{font-size:13px;margin:22px 0 8px;font-weight:700}
+.dfx p{line-height:1.7;margin:0 0 12px}
+.dfx pre{background:var(--dfx-panel);border:1px solid var(--dfx-line);border-left:2px solid var(--dfx-accent);border-radius:5px;padding:14px 16px;overflow-x:auto;font-size:12px;line-height:1.65;margin:12px 0 18px}
+.dfx pre code{font-family:"JetBrains Mono",ui-monospace,monospace;white-space:pre}
+.dfx code.inl{background:var(--dfx-panel);border:1px solid var(--dfx-line);border-radius:3px;padding:1px 5px;font-size:.92em}
+.dfx table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0 20px;display:block;overflow-x:auto}
+.dfx th{text-align:left;font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:10px;opacity:.55;padding:8px 12px 8px 0;border-bottom:1px solid var(--dfx-line);white-space:nowrap}
+.dfx td{padding:9px 12px 9px 0;border-bottom:1px solid rgba(255,255,255,.055);vertical-align:top;line-height:1.55}
+.dfx td:first-child,.dfx td:nth-child(2){white-space:nowrap;color:var(--dfx-accent)}
+.dfx ul{margin:0 0 16px;padding-left:18px;line-height:1.7}
+.dfx ul li{margin-bottom:7px}
+.dfx .steps{list-style:none;counter-reset:s;padding:0;margin:0 0 8px}
+.dfx .steps li{counter-increment:s;position:relative;padding:0 0 16px 40px;border-left:1px solid var(--dfx-line);margin:0 0 0 9px}
+.dfx .steps li:last-child{border-left-color:transparent}
+.dfx .steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:-9px;top:0;width:19px;height:19px;border-radius:50%;background:var(--bg,#050505);border:1px solid var(--dfx-line);font-size:9px;display:flex;align-items:center;justify-content:center;opacity:.7}
+.dfx .steps b{display:block;margin-bottom:3px}
+.dfx .steps span{font-size:12px;opacity:.72;line-height:1.6;display:block}
+.dfx .flow{font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;border:1px solid var(--dfx-line);border-radius:5px;padding:16px;background:var(--dfx-panel);margin:14px 0 20px}
+.dfx .note{border:1px solid var(--dfx-line);border-left:2px solid var(--dfx-warn);border-radius:5px;padding:12px 15px;font-size:12px;line-height:1.65;margin:14px 0 20px;background:var(--dfx-panel)}
+.dfx .kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:12px 0 20px}
+.dfx .kvs div{border:1px solid var(--dfx-line);border-radius:5px;padding:11px 13px;font-size:12px}
+.dfx .kvs b{display:block;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;opacity:.5;margin-bottom:5px;font-weight:500}
+.dfx .split{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.dfx .split{grid-template-columns:1fr}}
+/* headline savings figure */
+.dfx .hero{border:1px solid var(--dfx-line);border-left:2px solid var(--dfx-accent);border-radius:6px;background:linear-gradient(100deg,rgba(93,242,154,.07),rgba(93,242,154,0) 62%);padding:24px 26px;margin:28px 0 6px;display:flex;align-items:baseline;gap:20px;flex-wrap:wrap}
+.dfx .hero .n{font-size:58px;line-height:.95;font-weight:700;color:var(--dfx-accent);letter-spacing:-.03em}
+.dfx .hero .l{font-size:13px;letter-spacing:.17em;text-transform:uppercase;opacity:.8}
+.dfx .hero .s{flex-basis:100%;font-size:12px;opacity:.62;line-height:1.65;margin-top:6px}
+@media(max-width:600px){.dfx .hero .n{font-size:42px}}
+/* pipeline diagram */
+.dfx .diagram{border:1px solid var(--dfx-line);border-radius:6px;background:var(--dfx-panel);padding:20px 18px;margin:6px 0 24px;overflow-x:auto}
+.dfx .diagram svg{width:100%;height:auto;min-width:820px;display:block;font-family:"JetBrains Mono",ui-monospace,monospace}
+.dg-b{fill:none;stroke:rgba(255,255,255,.15);stroke-width:1.5}
+.dg-b.on{stroke:var(--green,#5df29a)}
+.dg-b.hi{stroke:#e8a33d}
+.dg-t{fill:#e9ede9;font-size:17px;font-weight:500}
+.dg-t.on{fill:var(--green,#5df29a)}
+.dg-t.hi{fill:#e8a33d}
+.dg-s{fill:rgba(255,255,255,.44);font-size:12px}
+.dg-e{stroke:var(--green,#5df29a);stroke-width:1.6;fill:none}
+.dg-d{stroke:rgba(255,255,255,.22);stroke-width:1.2;stroke-dasharray:4 5;fill:none}
+.dg-l{fill:rgba(255,255,255,.46);font-size:12.5px}
+.dg-cap{fill:rgba(255,255,255,.38);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<main>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
+  <div class="ico lg" aria-hidden="true">&#9673;</div>
+  <div>
+    <h1>Dataform Slots Optimization</h1>
+    <div style="font-size:12px;color:var(--green,#5df29a);">bigquery cost automation &middot; <i class="dot g" style="background:var(--green,#5df29a);"></i> deployed &middot; $50K+/yr saved</div>
+  </div>
+</div>
+
+<div id="p-roadmap"></div>
+<div id="p-timeline"></div>
+
+<div class="tabs" role="tablist">
+  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button role="tab" onclick="tab(this,'arch')">architecture</button>
+  <button role="tab" onclick="tab(this,'code')">code</button>
+  <button role="tab" onclick="tab(this,'mod')">modules</button>
+  <button role="tab" onclick="tab(this,'infra')">infra</button>
+  <button role="tab" onclick="tab(this,'road')">roadmap</button>
+</div>
+
+<!-- ============================== OVERVIEW ============================== -->
+<div id="pane-ov" class="pane on dfx">
+  <div class="two">
+    <div>
+      <p class="lede">Every Dataform model in the warehouse bills against BigQuery on-demand pricing by default. Some of them shouldn't. This pipeline reads seven days of job history, works out per-action whether slot reservations or on-demand is cheaper, then goes and edits the source repository itself &mdash; injecting a <code class="inl">pre_operations</code> block with the right <code class="inl">SET @@reservation</code> target and opening a pull request for a human to approve.</p>
+      <div class="tags" style="margin-top:22px;"><span>Python</span><span>BigQuery</span><span>Dataform</span><span>Cloud Run Jobs</span><span>Terraform</span><span>Bitbucket API</span><span>Cloud Scheduler</span></div>
+    </div>
+    <div>
+      <div class="stat4">
+        <div><div class="k">SAVINGS</div><div class="v" style="color:var(--green,#5df29a);">$50K+/yr</div></div>
+        <div><div class="k">STATUS</div><div class="v">deployed</div></div>
+        <div><div class="k">CADENCE</div><div class="v">quarterly</div></div>
+        <div><div class="k">LOOKBACK</div><div class="v">7d</div></div>
+      </div>
+      <a class="btn primary" id="src-link" style="display:block;text-align:center;">view source &#8599;</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="n">$50K+</div>
+    <div class="l">BigQuery spend removed per year</div>
+    <div class="s">Confirmed against historical slot and on-demand billing across the Dataform model set. The pipeline holds that number without anyone re-running the analysis by hand &mdash; it re-evaluates every model quarterly and rewrites the routing when the answer changes.</div>
+  </div>
+
+  <h3>The problem</h3>
+  <p>Dataform models run as BigQuery jobs, and by default those jobs land on on-demand pricing &mdash; billed per terabyte scanned. The organisation also owns a dedicated slot reservation, billed per slot-hour. Neither model is universally cheaper. A scan-heavy job that finishes fast is cheap on-demand and expensive on slots; a long-running job that grinds through comparatively little data is the reverse.</p>
+  <p>Historical analysis of <code class="inl">INFORMATION_SCHEMA.JOBS_BY_PROJECT</code> showed the split runs straight through the middle of the model set. Deciding per model by hand, then keeping that decision current as data volumes drift, is not work anyone was going to do repeatedly.</p>
+
+  <h3>The solution</h3>
+  <p>BigQuery exposes routing as a session variable, so the decision can live in the source file. For an action that benefits from the reservation:</p>
+  <pre><code>pre_operations {
+  SET @@reservation = 'projects/project_id/locations/location/reservations/reservation_id';
+}</code></pre>
+  <p>And for one that should stay on on-demand compute:</p>
+  <pre><code>pre_operations {
+  SET @@reservation = 'none';
+}</code></pre>
+  <p>The pipeline's whole job is to decide which of those two statements belongs in which file, and then to put it there without breaking anything around it.</p>
+
+  <h3>Operating parameters</h3>
+  <div class="kvs">
+    <div><b>Lookback window</b>7 days of job history per run</div>
+    <div><b>Decision rule</b>slots if avg slot cost &le; avg on-demand cost</div>
+    <div><b>Reservation target</b>advanced-analytics</div>
+    <div><b>PR target branch</b>prd</div>
+  </div>
+  <p>The full run path &mdash; cost evaluation through to an open pull request &mdash; is laid out under <b>architecture</b>.</p>
+</div>
+
+<!-- ============================ ARCHITECTURE ============================ -->
+<div id="pane-arch" class="pane dfx">
+
+  <h3>Run path</h3>
+  <div class="diagram">
+  <svg viewBox="0 0 1400 790" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline diagram: main, create_mapping_table, pull_table, then per repository clone, find_file, _find_blocks, process_sqlx_contents, diff, commit and push, pull request">
+    <defs>
+      <marker id="dgah" markerWidth="9" markerHeight="9" refX="8.5" refY="4.5" orient="auto">
+        <path d="M0 0 L9 4.5 L0 9 z" fill="var(--green,#5df29a)"/>
+      </marker>
+    </defs>
+
+    <!-- ROW 1 -->
+    <rect class="dg-b" x="40" y="60" width="260" height="86" rx="9"/>
+    <text class="dg-t" x="170" y="98" text-anchor="middle">main()</text>
+    <text class="dg-s" x="170" y="122" text-anchor="middle">cloud run entrypoint</text>
+
+    <path class="dg-e" d="M304 103 H332" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="340" y="60" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="470" y="98" text-anchor="middle">create_mapping_table()</text>
+    <text class="dg-s" x="470" y="122" text-anchor="middle">JOBS_BY_PROJECT &middot; 7d</text>
+
+    <path class="dg-e" d="M604 103 H632" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="640" y="60" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="770" y="98" text-anchor="middle">pull_table()</text>
+    <text class="dg-s" x="770" y="122" text-anchor="middle">grouped by repository</text>
+
+    <!-- label callouts -->
+    <path class="dg-d" d="M900 90 H940 V64 H976"/>
+    <rect class="dg-b" x="980" y="32" width="380" height="64" rx="9"/>
+    <text class="dg-t" x="1170" y="60" text-anchor="middle" style="font-size:14px;">action_id_name</text>
+    <text class="dg-s" x="1170" y="80" text-anchor="middle">label &rarr; target .sqlx file</text>
+
+    <path class="dg-d" d="M900 116 H940 V142 H976"/>
+    <rect class="dg-b" x="980" y="110" width="380" height="64" rx="9"/>
+    <text class="dg-t" x="1170" y="138" text-anchor="middle" style="font-size:14px;">dataform_repository_id</text>
+    <text class="dg-s" x="1170" y="158" text-anchor="middle">label &rarr; repository to clone</text>
+
+    <!-- descent to row 2 -->
+    <path class="dg-e" d="M770 146 V200 H170 V242" marker-end="url(#dgah)"/>
+    <text class="dg-l" x="792" y="196">for each repository &middot; worker.process()</text>
+
+    <!-- ROW 2 -->
+    <rect class="dg-b on" x="40" y="250" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="170" y="288" text-anchor="middle">clone()</text>
+    <text class="dg-s" x="170" y="312" text-anchor="middle">bearer token &middot; stderr masked</text>
+
+    <path class="dg-e" d="M304 293 H332" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="340" y="250" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="470" y="288" text-anchor="middle">find_file()</text>
+    <text class="dg-s" x="470" y="312" text-anchor="middle">os.walk &middot; action &rarr; .sqlx</text>
+
+    <path class="dg-e" d="M604 293 H632" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="640" y="250" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="770" y="288" text-anchor="middle">_find_blocks()</text>
+    <text class="dg-s" x="770" y="312" text-anchor="middle">regex + brace counting</text>
+
+    <!-- descent to row 3 -->
+    <path class="dg-e" d="M770 336 V388 H190 V432" marker-end="url(#dgah)"/>
+    <text class="dg-l" x="792" y="384">raw_content held in memory &middot; newline=&quot;&quot; preserved</text>
+
+    <!-- ROW 3 -->
+    <rect class="dg-b hi" x="40" y="440" width="300" height="86" rx="9"/>
+    <text class="dg-t hi" x="190" y="478" text-anchor="middle">process_sqlx_contents()</text>
+    <text class="dg-s" x="190" y="502" text-anchor="middle">SET @@reservation = &lsquo;&hellip;&rsquo;;</text>
+
+    <path class="dg-e" d="M344 483 H372" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="380" y="440" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="510" y="478" text-anchor="middle">unified_diff()</text>
+    <text class="dg-s" x="510" y="502" text-anchor="middle">DRY_RUN stops here</text>
+
+    <path class="dg-e" d="M644 483 H672" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="680" y="440" width="260" height="86" rx="9"/>
+    <text class="dg-t on" x="810" y="478" text-anchor="middle">commit_and_push()</text>
+    <text class="dg-s" x="810" y="502" text-anchor="middle">branch = TICKET_ID</text>
+
+    <path class="dg-e" d="M944 483 H972" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b on" x="980" y="440" width="380" height="86" rx="9"/>
+    <text class="dg-t on" x="1170" y="478" text-anchor="middle">_create_pull_request()</text>
+    <text class="dg-s" x="1170" y="502" text-anchor="middle">POST &rarr; Bitbucket REST API</text>
+
+    <path class="dg-e" d="M1170 526 V582" marker-end="url(#dgah)"/>
+
+    <rect class="dg-b" x="980" y="590" width="380" height="64" rx="9"/>
+    <text class="dg-t" x="1170" y="618" text-anchor="middle" style="font-size:15px;">pull request open on prd</text>
+    <text class="dg-s" x="1170" y="638" text-anchor="middle">awaiting human review</text>
+
+    <!-- branch annotations off the modifier -->
+    <path class="dg-d" d="M130 526 V590"/>
+    <rect class="dg-b" x="40" y="590" width="300" height="64" rx="9"/>
+    <text class="dg-t" x="190" y="616" text-anchor="middle" style="font-size:13.5px;">block exists</text>
+    <text class="dg-s" x="190" y="636" text-anchor="middle">re.sub swaps the target</text>
+
+    <path class="dg-d" d="M250 526 V560 H530 V590"/>
+    <rect class="dg-b" x="380" y="590" width="300" height="64" rx="9"/>
+    <text class="dg-t" x="530" y="616" text-anchor="middle" style="font-size:13.5px;">no block</text>
+    <text class="dg-s" x="530" y="636" text-anchor="middle">new one below config/js</text>
+
+    <text class="dg-cap" x="40" y="722">nothing merges automatically &mdash; DRY_RUN=true walks this entire path and stops at the diff, writing nothing</text>
+  </svg>
+  </div>
+  <p>The pipeline is append-only in spirit: it reads billing history, decides once per action, and proposes a change. Every stage above is idempotent &mdash; a repository already carrying the correct reservation produces no diff, and therefore no branch and no pull request.</p>
+
+  <h3>Mapping a job back to a file</h3>
+  <p>The hard part isn't the cost math, it's attribution. A BigQuery job record carries no pointer to the <code class="inl">.sqlx</code> file that produced it &mdash; by the time the query reaches the engine, Dataform has compiled it away. Paths don't survive compilation either.</p>
+  <p>The pipeline gets around this using the workflow execution labels Dataform attaches to the jobs it submits. Two labels do the work:</p>
+  <table>
+    <thead><tr><th>Label</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td>dataform_workflow_execution_action_id_name</td><td>Resolves to the action name, which maps to the <code class="inl">.sqlx</code> file name on disk</td></tr>
+      <tr><td>dataform_repository_id</td><td>Identifies which repository to clone and modify</td></tr>
+    </tbody>
+  </table>
+  <p>That pairing is what makes the loop closeable: a cost decision computed in the warehouse can be written back into the file that caused it.</p>
+
+  <h3>Pipeline stages</h3>
+  <ol class="steps">
+    <li><b>Cost evaluation</b><span>The orchestrator queries <code class="inl">INFORMATION_SCHEMA.JOBS_BY_PROJECT</code> for Dataform jobs over the trailing 7 days, filtering out state-resolution queries and cache hits so they can't skew the averages.</span></li>
+    <li><b>Label extraction</b><span>Each job row is joined back to its source through the Dataform workflow execution labels above.</span></li>
+    <li><b>Metric calculation</b><span>Per action: total slot hours, terabytes processed, on-demand cost, and slot cost.</span></li>
+    <li><b>Threshold comparison</b><span><code class="inl">reservation_action</code> is set to <code class="inl">'slots'</code> when average slot cost is less than or equal to average on-demand cost, and <code class="inl">'none'</code> otherwise. The tie goes to slots.</span></li>
+    <li><b>Mapping table generation</b><span>Results are written to a central BigQuery mapping table via create-or-replace, so the table is a snapshot of the most recent evaluation rather than an append log.</span></li>
+    <li><b>Repository grouping</b><span><code class="inl">pull_table</code> reads the mapping table back and returns the actions grouped by repository, so each repo is cloned exactly once regardless of how many files it contributes.</span></li>
+    <li><b>Code modification</b><span>The worker clones, locates each target file, and hands the contents to the modifier for parsing and injection.</span></li>
+    <li><b>Version control</b><span>A branch is cut and named from the Jira ticket ID plus a timestamp, changes are committed, and the branch is pushed with retries.</span></li>
+    <li><b>Pull request</b><span>A POST to the Bitbucket REST API opens a PR against <code class="inl">prd</code>. Nothing merges automatically &mdash; a human reviews every rewrite.</span></li>
+  </ol>
+
+  <h3>Why a human stays in the loop</h3>
+  <p>The pipeline has write access to production data pipelines. The design decision throughout is that it proposes and never disposes: it opens a PR, it doesn't merge one. <code class="inl">DRY_RUN</code> exists for the same reason &mdash; a full run can be executed end to end with the file writes replaced by unified diffs printed to the logs.</p>
+
+  <h3>Failure posture</h3>
+  <ul>
+    <li>The Bitbucket token is pulled from Secret Manager at runtime and masked out of subprocess stderr before anything is logged, so a clone failure can't leak credentials into Cloud Logging.</li>
+    <li>Push is wrapped in retries, since transient remote failures are the common case and a failed push otherwise strands a modified working tree.</li>
+    <li>If the modifier returns content identical to what it read, the file is skipped entirely &mdash; runs are idempotent, and a re-run on an already-optimised repo produces no branch and no PR.</li>
+    <li>The Cloud Run Job has a 300 second timeout and a single retry. A run that exceeds that budget is a signal that the repo set has outgrown the current sequential design.</li>
+  </ul>
+</div>
+
+<!-- ================================ CODE ================================ -->
+<div id="pane-code" class="pane dfx">
+
+  <h3>1 &mdash; Locating and reading the file</h3>
+  <p><code class="inl">worker.py</code> receives a target file name such as <code class="inl">my_action.sqlx</code> and walks the cloned tree recursively until it finds a match, then reads the file whole. <code class="inl">newline=""</code> is deliberate: it keeps the file's original line endings intact so the resulting diff contains only the intended change and not a repo-wide CRLF flip.</p>
+  <pre><code>file_path = find_file(target_file_name, repo_dir)
+# ... checks if file exists ...
+with open(file_path, encoding="utf-8", newline="") as file:
+    raw_content = file.read()</code></pre>
+
+  <h3>2 &mdash; Parsing blocks without a parser</h3>
+  <p>A <code class="inl">.sqlx</code> file is a set of named blocks &mdash; <code class="inl">config</code>, <code class="inl">js</code>, <code class="inl">pre_operations</code> &mdash; each wrapped in curly braces. Those blocks routinely contain JavaScript and JSON with braces of their own, which means a regex that matches from the opening brace to the next closing brace will happily truncate a block halfway through and leave behind a syntactically broken file.</p>
+  <p><code class="inl">_find_blocks</code> in <code class="inl">dataform_modifier.py</code> solves this in two moves.</p>
+
+  <h4>Step A &mdash; regex finds only the header</h4>
+  <p>The pattern is scoped to the block name and its first opening brace, nothing more. Multiline mode anchors it to the start of a line, so a mention of <code class="inl">config</code> inside a SQL comment or string can't trigger a match.</p>
+  <pre><code># Pattern looks for start of line, optional spaces, the block name, and the first '{'
+pattern = re.compile(rf"(?m)^\s*({'|'.join(block_names)})\s*\{{")</code></pre>
+
+  <h4>Step B &mdash; brace counting finds the end</h4>
+  <p>From the opening brace the function walks the string character by character, incrementing on <code class="inl">{</code> and decrementing on <code class="inl">}</code>. Depth returning to zero is the true end of the block, nesting included.</p>
+  <pre><code>brace_count = 0
+end_index = -1
+
+# Manually count braces to find the true end of the block
+for i in range(brace_start, len(raw_content)):
+    if raw_content[i] == "{":
+        brace_count += 1
+    elif raw_content[i] == "}":
+        brace_count -= 1
+
+    if brace_count == 0:
+        end_index = i + 1
+        break</code></pre>
+  <p>The result is a block descriptor carrying <code class="inl">start</code> and <code class="inl">end</code> offsets into the original string &mdash; enough to slice the file apart and reassemble it around a replacement.</p>
+
+  <h3>3 &mdash; Injecting the reservation</h3>
+  <p><code class="inl">process_sqlx_contents</code> builds the statement <code class="inl">SET @@reservation = '...';</code> and then branches on whether the file already has somewhere to put it.</p>
+
+  <h4>Scenario A &mdash; a pre_operations block exists</h4>
+  <p>The block is checked for an existing reservation assignment:</p>
+  <pre><code>r"SET\s+@@reservation\s*=\s*['\"].*?['\"]\s*;"</code></pre>
+  <ul>
+    <li><b>Match found</b> &mdash; <code class="inl">re.sub</code> swaps the old target for the new one in place. A model flipping from slots back to on-demand is the same code path as the reverse.</li>
+    <li><b>No match</b> &mdash; the statement is inserted immediately after the opening brace of <code class="inl">pre_operations</code>, ahead of whatever else the block already does.</li>
+  </ul>
+  <p>Either way the updated block is stitched back into the file using the offsets from <code class="inl">_find_blocks</code>, leaving every byte outside the block untouched:</p>
+  <pre><code>return raw_content[: block_info["start"]] + updated_block + raw_content[block_info["end"] :]</code></pre>
+
+  <h4>Scenario B &mdash; no pre_operations block</h4>
+  <p>A new block is generated:</p>
+  <pre><code>new_block = f"pre_operations {{\n  {injecting_statement}\n}}"</code></pre>
+  <p>Placement then follows the file's existing conventions. The modifier looks for <code class="inl">config</code> and <code class="inl">js</code> blocks, takes the end index of the last one, and inserts directly below it. If the file has neither, the new block is prepended to the top. The effect is that generated code lands where a person would have written it, which keeps review cheap.</p>
+
+  <h3>4 &mdash; Diff or write</h3>
+  <p>Back in the worker, the modified string is compared against the original. Identical means nothing was needed and the file is skipped. Otherwise the run branches on <code class="inl">DRY_RUN</code>: enabled, and <code class="inl">difflib.unified_diff</code> logs a terminal-readable comparison with nothing written to disk; disabled, and the file is overwritten &mdash; again with <code class="inl">newline=""</code> to preserve the original line endings.</p>
+  <pre><code>with open(file_path, "w", encoding="utf-8", newline="") as file:
+    file.write(modified_content)</code></pre>
+
+  <h3>5 &mdash; Cloning, committing, and opening the PR</h3>
+  <p>Cloning uses a Bearer token passed through an inline git header rather than embedded in the URL, so the credential never becomes part of a remote string that git might echo or persist. <code class="inl">_execute_clone_subprocess</code> wraps the call and scrubs the token out of stderr before any of it reaches the logger.</p>
+  <p>After modification, <code class="inl">commit_and_push</code> sets the git identity, cuts a branch named from the Jira ticket ID, commits, and pushes upstream with retries. <code class="inl">_create_pull_request</code> then assembles a JSON payload and POSTs it to the Bitbucket REST API, targeting <code class="inl">prd</code>.</p>
+</div>
+
+<!-- =============================== MODULES ============================== -->
+<div id="pane-mod" class="pane dfx">
+
+  <h3>Core processing</h3>
+  <table>
+    <thead><tr><th>File</th><th>Method / object</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>orchestrator.py</td><td>create_mapping_table</td><td>Creates or replaces the BigQuery table compiling historical Dataform run data and cost metrics, filtering out state-resolution queries and cache hits.</td></tr>
+      <tr><td>orchestrator.py</td><td>pull_table</td><td>Queries the mapping table and returns a list of dictionaries grouped by repository, identifying which actions need optimisation.</td></tr>
+      <tr><td>orchestrator.py</td><td>main</td><td>Entry point. Triggers table creation, fetches the active repositories, and loops through them invoking the worker.</td></tr>
+      <tr><td>worker.py</td><td>find_file</td><td>Recursively walks the cloned directory tree to locate a specific <code class="inl">.sqlx</code> file by name.</td></tr>
+      <tr><td>worker.py</td><td>process</td><td>Manages the lifecycle for a single repository: clone, locate files, invoke the modifier, save or diff the changes, trigger the push and PR.</td></tr>
+      <tr><td>dataform_modifier.py</td><td>_find_blocks</td><td>Regex plus manual brace counting to extract complete SQLX blocks (<code class="inl">config</code>, <code class="inl">js</code>, <code class="inl">pre_operations</code>) including nested braces.</td></tr>
+      <tr><td>dataform_modifier.py</td><td>process_sqlx_contents</td><td>Injects the reservation variable into an existing <code class="inl">pre_operations</code> block, or creates a new block below the existing <code class="inl">config</code>/<code class="inl">js</code> blocks.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Integration and configuration</h3>
+  <table>
+    <thead><tr><th>File</th><th>Method / object</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>git_integration.py</td><td>_execute_clone_subprocess</td><td>Runs the clone command and masks the Bitbucket token out of stderr to prevent credential leaks into logs.</td></tr>
+      <tr><td>git_integration.py</td><td>clone</td><td>Builds a clean repository URL and clones locally using a Bearer token supplied through inline git headers.</td></tr>
+      <tr><td>git_integration.py</td><td>commit_and_push</td><td>Configures git identity, branches, commits the modifications against the ticket ID, and pushes upstream with built-in retries.</td></tr>
+      <tr><td>git_integration.py</td><td>_create_pull_request</td><td>Assembles the JSON payload and POSTs to the Bitbucket REST API to open a PR against the production branch.</td></tr>
+      <tr><td>config.py</td><td>config (dict)</td><td>Centralised configuration dictionary populated from environment variables: GCP context, BigQuery routing, Bitbucket API access.</td></tr>
+      <tr><td>custom_logging.py</td><td>LogFormatter</td><td>Formats log records as GCP-compatible JSON, mapping file name, line number, and function into <code class="inl">sourceLocation</code>.</td></tr>
+      <tr><td>custom_logging.py</td><td>setup_logger</td><td>Attaches the JSON formatter to the default stream handler and sets the log level, defaulting to INFO.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Repository layout</h3>
+  <div class="flow"><code>dataform-slots-optimization/
+├── orchestrator.py        cost evaluation, mapping table, run loop
+├── worker.py              per-repo lifecycle, file I/O, diffing
+├── dataform_modifier.py   sqlx parsing and reservation injection
+├── git_integration.py     clone, branch, commit, push, pull request
+├── config.py              env-driven configuration dictionary
+├── custom_logging.py      structured JSON logging for GCP
+├── FUTURE_WORK.md         tracked deferrals and known limitations
+└── terraform/             cloud run job, scheduler, service account, IAM</code></div>
+</div>
+
+<!-- ================================ INFRA =============================== -->
+<div id="pane-infra" class="pane dfx">
+
+  <h3>Cloud Run Job</h3>
+  <p>The pipeline runs as a scheduled Cloud Run Job rather than a service &mdash; it has a start and an end, it holds no state between runs, and it needs no endpoint. Everything below is provisioned through Terraform.</p>
+  <div class="kvs">
+    <div><b>Job name</b>dataform-slots-optimization</div>
+    <div><b>CPU</b>1</div>
+    <div><b>Memory</b>512Mi</div>
+    <div><b>Timeout</b>300 seconds</div>
+    <div><b>Max retries</b>1</div>
+    <div><b>Schedule</b>0 0 1 */3 * (quarterly)</div>
+  </div>
+  <p>The quarterly cadence is a deliberate match to how fast the underlying answer actually changes. Data volumes drift over months, not days, and every run costs a human a code review &mdash; running it weekly would generate review load without changing many decisions.</p>
+
+  <h3>Environment variables</h3>
+  <table>
+    <thead><tr><th>Variable</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>TARGET_RESERVATION_ID</td><td>Reservation the pipeline routes to when slots win. Set to <code class="inl">advanced-analytics</code>.</td></tr>
+      <tr><td>BQ_RESERVATION_BASE</td><td>Base path the full reservation string is built from, i.e. <code class="inl">projects/&hellip;/locations/&hellip;/reservations/&hellip;</code>.</td></tr>
+      <tr><td>TICKET_ID</td><td>Jira ticket used for the branch name and commit message, tying every generated PR back to tracked work.</td></tr>
+      <tr><td>DRY_RUN</td><td>When true, the run logs unified diffs instead of writing files, pushing, or opening PRs.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Service account and IAM</h3>
+  <p>The job executes under a dedicated service account, <code class="inl">dataform-slots-optimization</code>, with the narrowest set of roles the workflow needs:</p>
+  <table>
+    <thead><tr><th>Role</th><th>Why it's needed</th></tr></thead>
+    <tbody>
+      <tr><td>roles/logging.logWriter</td><td>Push the structured JSON logs produced by <code class="inl">custom_logging</code> into Cloud Logging.</td></tr>
+      <tr><td>roles/secretmanager.secretAccessor</td><td>Retrieve the Bitbucket API token at runtime rather than baking it into the image or the job spec.</td></tr>
+      <tr><td>roles/cloudscheduler.jobRunner</td><td>Allow the scheduler trigger to invoke the job.</td></tr>
+    </tbody>
+  </table>
+  <div class="note" style="border-left-color:var(--green,#5df29a);">The Bitbucket token is the sharpest edge in this system: it can push to production repositories. It lives only in Secret Manager, is read at runtime, and is scrubbed from subprocess stderr before any log line is emitted.</div>
+</div>
+
+<!-- =============================== ROADMAP ============================== -->
+<div id="pane-road" class="pane dfx">
+
+  <h3>Known limitations</h3>
+  <p>Tracked in <code class="inl">FUTURE_WORK.md</code> alongside the planned work.</p>
+  <ul>
+    <li><b>Aliased actions can't be resolved.</b> <code class="inl">find_file</code> matches the action name against file names on disk. When a Dataform action has been renamed in its <code class="inl">config</code> block, the action name and the file name diverge and the lookup fails. The fix is to read <code class="inl">config</code> blocks during the walk and build an alias-to-path map before searching &mdash; the block parser needed for it already exists.</li>
+    <li><b>Zero-margin switching.</b> The rule currently flips to slots whenever slots are cheaper by any amount, so an action a fraction of a cent apart will churn between states across runs.</li>
+    <li><b>Cost arithmetic lives in the pipeline.</b> On-demand and slot costs are computed in the orchestrator's SQL. Reconciling that arithmetic line-for-line with the FollowRabbit models is tracked below so both sides report the same number by construction.</li>
+  </ul>
+
+  <h3>Planned</h3>
+  <ul>
+    <li><b>Percentage threshold buffer.</b> Require slots to beat on-demand by a configurable margin before switching, which kills the churn described above.</li>
+    <li><b>Cost calculation alignment.</b> Refactor the financial logic to match the internal cost models produced by the FollowRabbit team, so the pipeline's reporting and the official projections stay in lockstep as reservation pricing changes.</li>
+    <li><b>Alias resolution.</b> Parse <code class="inl">config</code> blocks to map action names to true file paths.</li>
+    <li><b>GitLab support.</b> Generalise <code class="inl">git_integration</code> so clone, push, and merge-request logic work against the GitLab API ahead of the organisational migration off Bitbucket.</li>
+    <li><b>Google Chat notifications.</b> Post an execution summary and the PR links to a Chat space on completion, so a run that opens PRs doesn't depend on someone checking Bitbucket.</li>
+    <li><b>Automatic reviewers.</b> Assign the Advanced Analytics leads as explicit reviewers on every generated pull request.</li>
+  </ul>
+
+  <h3>What I'd do differently</h3>
+  <ul>
+    <li>Repositories are processed sequentially inside a 300 second budget. That holds at the current repo count and won't forever &mdash; fanning out one Cloud Run task per repository is the obvious next move.</li>
+    <li>The mapping table is create-or-replace, so each run overwrites the last. Keeping history would make it possible to see which actions oscillate, and to tune the threshold buffer against real data rather than a guess.</li>
+  </ul>
+</div>
+
+</main>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

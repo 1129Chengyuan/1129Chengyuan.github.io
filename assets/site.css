@@ -210,6 +210,7 @@ pre.code{background:var(--bg2);border:1px solid var(--line);border-radius:10px;p
 #topo-preview .d{color:var(--fg2);font-size:12px;margin-top:5px;}
 #topo-preview .st2{display:flex;gap:22px;margin-top:10px;}
 #topo-preview .st2 span{font-size:13px;color:var(--fg);}
+#topo-preview .st2 span:first-child{color:var(--green);font-weight:500;}
 #topo-preview .st2 i{display:block;font-style:normal;font-size:9px;color:var(--fg3);letter-spacing:.5px;margin-bottom:2px;}
 #topo-preview .tg{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 #topo-preview .tg span{font-size:10px;color:var(--fg2);border:1px solid var(--line2);border-radius:5px;padding:2px 7px;}
