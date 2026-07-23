@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>about — Cheng-Yuan Li</title>
+<meta name="description" content="Background, stack, and what I am working on.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="about — Cheng-Yuan Li">
+<meta property="og:description" content="Background, stack, and what I am working on.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="about — Cheng-Yuan Li">
+<meta name="twitter:description" content="Background, stack, and what I am working on.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script>window.SITE_ROOT="";window.SITE_PAGE="about";</script>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<main>
+
+<div class="sec-head"><h1>about.md</h1><span class="meta">last edited: 7/24/2026</span></div>
+
+<div class="two" style="margin-top:26px;">
+  <div>
+    <p class="lede">I like systems that fail loudly and recover quietly. Most of what I build sits below the application layer &mdash; write-ahead logs, memtables, compaction schedulers, consensus.</p>
+    <p class="lede" style="margin-top:16px;">The through-line is durability under pressure: what happens when the process dies mid-write, when the disk fills, when four SSTables pile up and something has to merge them without pulling a gigabyte into RAM. Those are the questions I find genuinely fun.</p>
+    <p class="lede" style="margin-top:16px;">Currently a CS student specializing in data engineering. When I'm not writing C++ or Go, I'm probably reading a paper about compaction strategies I don't need yet.</p>
+
+    <div class="side-label" style="margin-top:30px;">TIMELINE</div>
+    <ul class="about-timeline">
+      <li><div class="yr">May 2026 - Aug 2026</div><div class="ev">Data Engineer Intern</div><div class="de">Gordon Food Service</div></li>
+      <li><div class="yr">May 2025 - Aug 2025</div><div class="ev">Research Intern</div><div class="de">A*STAR Institute of High Performance Computing, Singapore</div></li>
+      <li><div class="yr">Jan 2025 - May 2025</div><div class="ev">Teaching Assistant</div><div class="de">Georgia Tech; Introduction to OOP (CS 1331) and Database Systems (CS 4400)</div></li>
+    </ul>
+  </div>
+
+  <div>
+    <img class="portrait" src="assets/portrait.jpg" alt="Portrait" width="210" height="240">
+
+    <div class="side-label" style="margin-top:26px;">STACK</div>
+    <div class="stack-group">
+      <div class="gk">LANGUAGES</div>
+      <div class="tags"><span>C++20</span><span>Go</span><span>Python</span><span>SQL</span></div>
+    </div>
+    <div class="stack-group">
+      <div class="gk">INFRA</div>
+      <div class="tags"><span>Kafka</span><span>gRPC</span><span>Postgres</span><span>Arrow</span></div>
+    </div>
+    <div class="stack-group">
+      <div class="gk">TOOLS</div>
+      <div class="tags"><span>CMake</span><span>Linux</span><span>gdb</span><span>perf</span></div>
+    </div>
+
+    <div class="side-label" style="margin-top:22px;">CURRENTLY</div>
+    <p style="color:var(--fg2);font-size:13px;line-height:1.7;margin-bottom:22px;">Reworking SmallDB's compaction into leveled tiers to cut write amplification.</p>
+    <div class="side-label">READING</div>
+    <p style="color:var(--fg2);font-size:13px;line-height:1.7;">The LSM-tree paper (O'Neil et al.), the RocksDB tuning guide, and far too many Jepsen reports.</p>
+  </div>
+</div>
+
+<div class="side-label" style="margin-top:38px;">BY THE NUMBERS</div>
+<div class="numbers">
+  <div><div class="n">4</div><div class="l">years writing code</div></div>
+  <div><div class="n" data-stat="totals.projects">0</div><div class="l">projects tracked</div></div>
+  <div><div class="n" data-stat="totals.done">0</div><div class="l">shipped / done</div></div>
+  <div><div class="n" data-stat="totals.locStr">0</div><div class="l">lines across projects</div></div>
+  <div><div class="n" data-stat="smalldb.fp">0</div><div class="l">bloom false-pos target</div></div>
+</div>
+
+</main>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

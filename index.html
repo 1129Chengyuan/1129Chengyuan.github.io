@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheng-Yuan Li — systems engineer</title>
+<meta name="description" content="Data engineering portfolio: storage engines, pipelines, distributed systems.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cheng-Yuan Li — systems engineer">
+<meta property="og:description" content="Data engineering portfolio: storage engines, pipelines, distributed systems.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Cheng-Yuan Li — systems engineer">
+<meta name="twitter:description" content="Data engineering portfolio: storage engines, pipelines, distributed systems.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script>window.SITE_ROOT="";window.SITE_PAGE="title";</script>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<div class="title-wrap">
+  <div class="title-ghost" aria-hidden="true">01</div>
+  <div class="title-grid">
+
+    <div class="title-left">
+      <div class="prompt">whoami</div>
+      <h1 class="title-title">SYSTEMS<br><span class="accent" id="typed"></span><span class="cursor">_</span></h1>
+      <p class="tag">Storage engines, pipelines, distributed systems. I build the layer people forget exists until it breaks &mdash; then make sure it doesn't.</p>
+
+      <div class="title-cta">
+        <a class="btn primary" id="enter-btn" href="system.html">enter system &rarr;</a>
+        <a class="btn" id="resume-btn" href="assets/resume.pdf" target="_blank" rel="noopener">resume &darr;</a>
+      </div>
+
+      <div class="title-chips">
+        <div class="chip hot"><div class="k">SEQ WRITES</div><div class="v" data-count-stat="smalldb.writes">0</div></div>
+        <div class="chip"><div class="k">WRITE LATENCY</div><div class="v" data-stat="smalldb.latency"></div></div>
+        <div class="chip"><div class="k">BLOOM SPEEDUP</div><div class="v" data-stat="smalldb.speedup"></div></div>
+      </div>
+    </div>
+
+    <div class="ascii-panel">
+      <div class="ascii-top">
+        <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span class="title">profile.ascii</span>
+      </div>
+      <pre class="ascii" aria-label="ASCII-art portrait">
+                                                                                                                          
+                                                                                                                          
+                                                          .,.                                                             
+                                                     :fuvufTffTtjunzYYnfi,                                                
+                                                   ;jQqqqmLLwbkbbbddbddkhdmvT;.                                           
+                                                 .ILkkppdbbbahhhkddbhahbbdkkdwLYjtI.                                      
+                                             ::IiTJpkkhaMooohdkbbbkbbbbddbqpkhkbkakbCF.                                   
+                                       .:!xXmqqpbkhhkhooaaaaooahkkkkkdpdppdbaahhkkhhhdJI                                  
+                                    .ijYQqdhhbbkhhaoooaaaoaahhahkbdkhkbkkkkhahaaahaahaakc,                                
+                                   tnUwdkaoooooaahhoooMMWWMMMoaoahhhkaoahaoMMMMoaaahhkaahwf.                              
+                                 ;vLmqbaoMMWMMoooohaoMMMMMWWMMWMMMMoohhoMMMMMWMMMaaaoaoooMaqj.                            
+                                tLddkhhooMMMMWWWWMMMaooooMMMMoMMoaaaoMMWWWWWMMohaMMoaoMooooMkX!.                          
+                               FphhaMMMMMMMMMWWWMMoooahahaoooMMMMMMMMMMMMMMMMMMMMMMoaoMMMMMMMopx                          
+                              tdkhaMWWWWMaaMMMoohbqwwwQLLQmqdbbkhahhaoMMMMMMMMMMMoooMMMMMoooMMoQ!                         
+                             ;qahaoMMWMMahhkbpmCYcuxrrnnuuucYCqbkkbbhaoMWWMMMMMMMMMMMMMMMMoaMMoku.                        
+                             uhoahaMMMMakbqwLzxjFfTTTTTTTTfFjnUQLLwdbkaooMMoMMMMMMMoaahooMMMMMMMw.                        
+                            ,JoMMMMMMMohbqmYxjFfTTtttttt!!!ttfFxuuzYLqbhhhhaMMMMoooooMMMMMMMMMMMm.                        
+                            ,JMWMMMMMMhbdwUnjFfTTt!!!!!!!llll!!tTFjnvcXJLmpbhaoahhaaoMMMWMWWMMMoj                         
+                             nkoooMohkbhdCvrFFfTtttt!!!lllllllllll!tTttfjxuUwbhaaoMMMMoMMMWWWWML.                         
+                             ,QoMMoMoakpmXnrFfTTTttt!!llllIIIIllllll!!ttTfjxnzCwdkaooohMMMMWMMMQ                          
+                              ;LMMMMoohdLcxjFfTTtttt!!!!lllllllllll!!!!ttTTFjrxucYmbaaaMMMMMMWMY                          
+                               IpMMMMMhqUnjjFffTtt!!!lllllIlIIIlllllll!!!tTfFjrxnuzCpaoMMMWMMMoX                          
+                               ;wMMMMokwcrjjrrjFft!lIi;;;;;;iiiiiii;iiIl!tTfFrnnnnuzCphMMMWWMoku                          
+                               .voMMoakYxrxvzXzzYCJYzxF!Ii;;;;:;;iIltFxuvczvcXUUXvnucXmhMMMMMob;                          
+                                IwMoMhCuxuULYJCLCUXzYzurf!lIIIIll!tFxcXJJUJLQJYUCCXuuvXpaMMMMon.                          
+                                ,LooobznnccxjfT!IiiI!tTTTTt!ll!!ttTffFFT!lll!TFjnvvunucQhoMMMwI                           
+                                 vaoMbzxxnrFfTt!llIIIl!tttt!l!!ttTfTt!lii;il!tTfFrxxxncCkMMMbt                            
+                                ,xkMokXxrrFFjxvYXpLdzrFtttt!lIl!ttTTTTruQQbmYYurjjjrrncLbaMMpXF.                          
+                               ,jXqaapXxrFfFxvnffJmCTltt!!t!lII!ttt!Tfl!YwwzfrXvrFFFrxcQphobUvn,                          
+                               :FxcCbqUxjftttTTt!ll!tt!l!!!!lIl!tTtll!!!!!!ttTfTtTTfjrcQpdCcuxj.                          
+                               :fFrxYqJnjft!llllllllIIIl!!!lIIl!ttt!IIiIllllllll!!tfFjuCQcrrxjt.                          
+                               .tFFFvmJxFT!llIIIiiiiiiII!!llIIIltTttliiiiiiiiIIl!!tTfjnJcnxjrF:                           
+                                iFTjrXJxFT!llIIiii;ii;il!!!lIIIltTTT!I;;;;;iiIIll!tTfjncjjrrjl                            
+                                .tfjrFxrFTt!lIIIii;;;;Il!t!lIIIl!TfftIi;;;iiiIIll!tTFjnrjjxjF:                            
+                                 ;ffrrjrFTt!llIIii;;;iI!tt!lIiiIltfFfliiiiiiIIll!!TfFrnnxxrrt                             
+                                  ;fjrjjFTt!!lIIiiiiiiI!!!!!I;iIltfTf!iiiiiiIIll!tTFjxrFrxrf                              
+                                   .TFjjjfTt!llIIiiiiiiltTFjt!ttTFFff!iiiIIIIll!tTfFrxrjjjl                               
+                                    .!FFjFfT!!llIIIIIIIll!tttTfTTTTt!lIIiIIIll!!tTFjxrjjT:                                
+                                      ,;lFFTt!!llIIIIll!!!!!lllll!!!!!llIIlll!!tTfFrt:.                                   
+                                         !Fft!!!llll!!tt!!!!lllll!!!!t!!ll!!!ttTTFjF,                                     
+                                         ,fFTtt!!ll!TjrrjFFFFFFFfFjrxnxf!l!tttTffjr;                                      
+                                          ,jFTtt!llll!tTffTTtttttffFFT!l!!!tTTffjri                                       
+                                           .fFTTt!!ll!!!!ttTtTTTfTTTt!ll!!tTTfFjrf.                                       
+                                             lFfTTt!ll!!ll!!!!!!!!!!!!!!ttTffFjrnf.                                       
+                                             ;FjFfTt!!!!!lllllIlll!!!!!!tTfFjrxnnt.                                       
+                                             ;FjjFFfT!!l!!!llllll!!!!!!tTfjrxxxxnt                                        
+                                             ;fFFFFFFT!!lllllll!!!!!!!tfjrxxrxxnut.                                       
+                                             ;fFfTffFFft!llllll!!!!!tTFrxrjjjrrxuf.                                       
+                                             IFFTTTTffFFFfTttttttTfFxnrjjFFFFFjruui                                       
+                                            .IFFfTttTTfffffffFrrrrjFfffffffffFjruj!,                                      
+                                            ;;tjfTtttTTTTtt!lllll!!tTTTTTTTTfFjxrltT,                                     
+                                           ;;;:TFfTtttTTTtttlIlll!ttTTTTttTTfjrjIltft,                                    
+                                          :i;;;,TFTtttttTTttTt!tttttTTTtTTffFr!;Illtf!.                                   
+                                     .,::;ii;;;:,IfTtttttttttttttttttTTttTfFf;;iIIl!TTt:.                                 
+                                 .,,::,,:;ii;;;;:,:Tft!!tt!!!!!!!!!ttTTTTffi,:iiiiI!tttII!li:.                            
+                             .,,::::;;;;iii;;;;::::.:TTttt!!!!!!!!tttTTTfI,,:;iiiiil!!!ii;il!!lI:.                        
+                         .,,:,,::,,;;;i;;ii;;;;:::::..lftttt!!!!ttTTTTT!,,,:;;iiiiiIl!!ii;;;Ill!lllI,                     
+                    .,,:,,,:::::::;;;;i:;;;;;;:::::::,.:ffttttttTTfTTt:.,::;;i;ii;;il!lIIIiiIliiiiIlllI;.                 
+               ..,,,,::;;;;;;;;;;;;;;;;:;;;;;;::;::::::,.IFFTtTTTffTi..,:;;ii;;;;;;illIIIIiiil!IiiiiiiIIIIli:.            
+           .,,,,,:;;;;;;;;;;;;;;;;;;;;;:;;i:::::;:::::::,,:!rjFFFFl:,,::;;;;;;;;;:;I!IIiiIiiiil!Ii;iIlIIiiiIIl!I;.        
+       .,,,,::;;;;;;;ii;;;;i;;;;;;:;;;;:;;;i,,:::::::::;:,,,;!xxt;,,,:;;;;;;;;;;;:i!iiiiiIii;iI!!IiiiiIIllllIi;ill!l:     
+      .,:;;;;;;;;;;;ii;ii;::;;;;;;;::;:::;;;;,,,::::,,:::,,iT;:;,,,,:;;;;;;;;;::;i!iiiiiiiiiiiil!lIi;;ii;iiIll!lI;iIi     
+      ,;;;;;;;;;;;iii;;;;;;;;;;;;;;:;;;;;;;;;:,::::,,,,:::Iliiill:,,,:;;;;;;;;;;ilIiiiiiiiiiii;I!IiIIi;i;iiiiIl!lIIli     
+      ,;;;;;;;;;;iii;;i;;;;;;;;;;;:;::::;;;;;;:::::,,,,,;t!iIIiiil;,,,::;;;;;;;;lIiiiiiiiiiii;;illiiii;;;iiiiiI!liii;     
+      ,;;;;;;;;;iii;;;;;::;;;;;;;;;;;:::;;;;;i;:::::,,:lTfI;:::::;II:,::::;;;:;Ili;;;;;;;ii;;;;;ilIiii;;;iiiiiiI!lIi;     
+      ,;;;;;;;iiii;;;;;;::;;;;;;;;;;;;;;;;;;;i;::::,,;tTlI;:;:,,,:;I!;::::::::i!i;;;;;;;;ii;;;;;iIlIIi;;;iiii;iiIllI;     
+      ,;;;;;;iiii;;;i;;;;;;;;;;;;;;;;;;;;;;;;iI:::,:ITtl;i;::::::::il!i::::::;tI;;;;;;;;;ii;;;;;;illII;;;iiii;;iiiII;     
+
+</pre>
+      <div class="ascii-cap">&gt; profile.ascii &middot; density-mapped render</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

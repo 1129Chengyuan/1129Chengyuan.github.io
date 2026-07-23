@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>system — Cheng-Yuan Li</title>
+<meta name="description" content="Live system topology: projects, build status, and recent activity.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="system — Cheng-Yuan Li">
+<meta property="og:description" content="Live system topology: projects, build status, and recent activity.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="system — Cheng-Yuan Li">
+<meta name="twitter:description" content="Live system topology: projects, build status, and recent activity.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script>window.SITE_ROOT="";window.SITE_PAGE="system";</script>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<main>
+
+<div class="sys-head">
+  <h1>system.topology</h1>
+  <span class="meta">hover a node to inspect &middot; click to open &middot; type <b style="color:var(--green)">cd &lt;name&gt;</b> or <b style="color:var(--green)">view orbit</b> below</span>
+</div>
+
+<div class="frame frame-bleed">
+  <div class="topbar">
+    <span class="cmd">$ system --topology --live</span>
+    <div class="topbar-r">
+      <div class="mode-toggle" role="group" aria-label="Presentation mode">
+        <button type="button" data-mode="graph" class="active">graph</button>
+        <button type="button" data-mode="orbit">orbit</button>
+      </div>
+      <span class="legend"><span><i class="dot g"></i>done</span><span><i class="dot r"></i>in progress</span></span>
+      <span class="sys-status" id="sys-status"></span>
+    </div>
+  </div>
+  <div class="floor" aria-hidden="true"></div>
+  <div class="particles" id="particles" aria-hidden="true"></div>
+  <div id="scene" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div id="topo-preview" role="status">
+    <div class="t"></div><div class="d"></div>
+    <div class="st2"></div><div class="tg"></div><div class="s"></div>
+  </div>
+</div>
+
+</main>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

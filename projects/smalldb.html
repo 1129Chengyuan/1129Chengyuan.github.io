@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmallDB — LSM-tree storage engine</title>
+<meta name="description" content="An LSM-tree storage engine in C++20: WAL, memtable, sparse-indexed SSTables, bloom filters, streaming compaction.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SmallDB — LSM-tree storage engine">
+<meta property="og:description" content="An LSM-tree storage engine in C++20: WAL, memtable, sparse-indexed SSTables, bloom filters, streaming compaction.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SmallDB — LSM-tree storage engine">
+<meta name="twitter:description" content="An LSM-tree storage engine in C++20: WAL, memtable, sparse-indexed SSTables, bloom filters, streaming compaction.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script>window.SITE_ROOT="../";window.SITE_PAGE="smalldb";</script>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<main>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
+  <div class="ico lg" aria-hidden="true">&#9707;</div>
+  <div>
+    <h1>SmallDB</h1>
+    <div style="font-size:12px;color:var(--green);">storage engine &middot; C++20 &middot; <i class="dot g"></i> done</div>
+  </div>
+</div>
+
+<div id="p-roadmap"></div>
+<div id="p-timeline"></div>
+
+<div class="tabs" role="tablist">
+  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button role="tab" onclick="tab(this,'arch')">architecture</button>
+  <button role="tab" onclick="tab(this,'code')">code</button>
+</div>
+
+<div id="pane-ov" class="pane on">
+  <div class="two">
+    <div>
+      <p class="lede">An LSM-tree storage engine written from scratch in C++20. Writes hit a write-ahead log before an in-memory red-black tree; full memtables flush to immutable sorted SSTables, each with a sparse index (every 32nd key) and a bloom filter tuned to a 1% false-positive rate. Once four SSTables exist, a condition variable wakes a background thread that runs a streaming k-way merge &mdash; compaction never loads a whole table into RAM.</p>
+      <div class="tags" style="margin:20px 0 24px;"><span>C++20</span><span>WAL</span><span>bloom filter</span><span>sparse index</span><span>k-way merge</span><span>std::thread</span></div>
+      <div class="side-label">LEVELS (live)</div>
+      <div class="tier">
+        <div style="height:24px;background:rgba(93,242,154,.18);border:1px solid var(--green);color:var(--green);"><span>memtable</span><span id="mt-count">0/6</span></div>
+        <div style="height:19px;background:rgba(93,242,154,.11);border:1px solid var(--green-dim);color:#8ab89e;"><span>L0 sstables</span><span id="sst-count">0</span></div>
+        <div style="height:15px;background:rgba(93,242,154,.06);border:1px solid #1d2a22;color:#59705f;font-size:9px;"><span>compacted run</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="stat4">
+        <div><div class="k">SEQ WRITES</div><div class="v" data-stat="smalldb.writes"></div></div>
+        <div><div class="k">WRITE LATENCY</div><div class="v" data-stat="smalldb.latency"></div></div>
+        <div><div class="k">BLOOM READS</div><div class="v" data-stat="smalldb.bloom"></div></div>
+        <div><div class="k">FALSE-POS TARGET</div><div class="v" data-stat="smalldb.fp"></div></div>
+      </div>
+      <a class="btn primary" id="src-link" style="display:block;text-align:center;" target="_blank" rel="noopener">view source &#8599;</a>
+      <div class="side-label" style="margin-top:26px;">FILES</div>
+      <div style="font-size:12px;color:var(--fg2);line-height:1.9;">
+        smalldb.cpp &middot; orchestration, threads<br>
+        mem_table.cpp &middot; RB-tree + tombstones<br>
+        wal.cpp &middot; append + recover<br>
+        ss_table.cpp &middot; iterator, sparse index<br>
+        compaction.cpp &middot; streaming merge<br>
+        bloom_filter.cpp &middot; double hashing
+      </div>
+    </div>
+  </div>
+
+  <div class="logpanel">
+    <div class="logtop">
+      <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+      <span style="font-size:11px;color:var(--fg3);">pipeline-stream</span>
+      <span class="live">live</span>
+    </div>
+    <div id="loglines" aria-hidden="true"></div>
+  </div>
+</div>
+
+<div id="pane-arch" class="pane">
+  <div class="arch-toggle" role="group" aria-label="Trace path">
+    <button class="active" onclick="archPath(this,'write')">&#9998; write path</button>
+    <button onclick="archPath(this,'read')">&#8981; read path</button>
+  </div>
+  <div class="archbox">
+    <svg id="svg-write" width="100%" viewBox="0 0 860 430" style="min-width:760px;" role="img" aria-label="Write path from put through WAL, memtable, SSTable flush, and compaction">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#5df29a" stroke-width="1.6" stroke-linecap="round"/></marker></defs>
+      <g font-family="JetBrains Mono, monospace">
+      <rect x="30" y="30" width="120" height="56" rx="8" fill="#0f0f0f" stroke="#333"/>
+      <text x="90" y="55" text-anchor="middle" fill="#e8e8e8" font-size="13">put(k, v)</text>
+      <text x="90" y="72" text-anchor="middle" fill="#666a72" font-size="10">public API</text>
+      <line x1="150" y1="58" x2="200" y2="58" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="210" y="30" width="170" height="56" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="295" y="55" text-anchor="middle" fill="#5df29a" font-size="13">wal.append()</text>
+      <text x="295" y="72" text-anchor="middle" fill="#666a72" font-size="10">[ksz|vsz|k|v] &middot; flush</text>
+      <line x1="380" y1="58" x2="430" y2="58" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="440" y="30" width="190" height="56" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="535" y="55" text-anchor="middle" fill="#5df29a" font-size="13">mem_table.set()</text>
+      <text x="535" y="72" text-anchor="middle" fill="#666a72" font-size="10">std::map (RB-tree) &middot; byte cap</text>
+      <path d="M535 86 V140" fill="none" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <text x="552" y="120" fill="#666a72" font-size="10">isFull() &rarr; flush_memtable()</text>
+      <rect x="440" y="150" width="190" height="56" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="535" y="175" text-anchor="middle" fill="#e8e8e8" font-size="13">sstable_N.sst</text>
+      <text x="535" y="192" text-anchor="middle" fill="#666a72" font-size="10">immutable sorted run</text>
+      <line x1="630" y1="164" x2="668" y2="152" stroke="#3a3a3a" stroke-dasharray="3 4"/>
+      <rect x="670" y="136" width="162" height="34" rx="6" fill="#0a0a0a" stroke="#333"/>
+      <text x="751" y="157" text-anchor="middle" fill="#9a9da5" font-size="10">.idx &mdash; every 32nd key</text>
+      <line x1="630" y1="192" x2="668" y2="200" stroke="#3a3a3a" stroke-dasharray="3 4"/>
+      <rect x="670" y="184" width="162" height="34" rx="6" fill="#0a0a0a" stroke="#333"/>
+      <text x="751" y="205" text-anchor="middle" fill="#9a9da5" font-size="10">bloom &mdash; p = 0.01</text>
+      <text x="30" y="185" fill="#666a72" font-size="10">then: wal.clear() &middot; memtable.clear()</text>
+      <path d="M535 206 V240 H265 V262" fill="none" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <text x="552" y="232" fill="#666a72" font-size="10">&times; 4 flushes</text>
+      <rect x="180" y="272" width="170" height="60" rx="8" fill="#0f0f0f" stroke="#e8b13c"/>
+      <text x="265" y="296" text-anchor="middle" fill="#e8b13c" font-size="12">&ge; 4 SSTables</text>
+      <text x="265" y="313" text-anchor="middle" fill="#666a72" font-size="10">cv notifies bg thread</text>
+      <line x1="350" y1="302" x2="395" y2="302" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="405" y="272" width="200" height="60" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="505" y="296" text-anchor="middle" fill="#5df29a" font-size="12">streaming_merge()</text>
+      <text x="505" y="313" text-anchor="middle" fill="#666a72" font-size="10">k-way min-heap &middot; O(k) RAM</text>
+      <line x1="605" y1="302" x2="650" y2="302" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="660" y="272" width="180" height="60" rx="8" fill="#0f0f0f" stroke="#333"/>
+      <text x="750" y="296" text-anchor="middle" fill="#e8e8e8" font-size="12">compacted .sst</text>
+      <text x="750" y="313" text-anchor="middle" fill="#666a72" font-size="10">tombstones dropped</text>
+      <text x="30" y="392" fill="#666a72" font-size="10">durability lands at step 2 &mdash; a crash before flush replays wal.log into the memtable on boot (wal::recover)</text>
+      </g>
+    </svg>
+    <svg id="svg-read" width="100%" viewBox="0 0 860 400" style="min-width:760px;display:none;" role="img" aria-label="Read path: memtable, then bloom filter, sparse index, bounded scan per SSTable">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#5df29a" stroke-width="1.6" stroke-linecap="round"/></marker></defs>
+      <g font-family="JetBrains Mono, monospace">
+      <rect x="30" y="30" width="110" height="56" rx="8" fill="#0f0f0f" stroke="#333"/>
+      <text x="85" y="62" text-anchor="middle" fill="#e8e8e8" font-size="13">get(k)</text>
+      <line x1="140" y1="58" x2="190" y2="58" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <rect x="200" y="30" width="180" height="56" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="290" y="55" text-anchor="middle" fill="#5df29a" font-size="13">mem_table.get()</text>
+      <text x="290" y="72" text-anchor="middle" fill="#666a72" font-size="10">O(log n) &middot; newest data</text>
+      <line x1="380" y1="58" x2="430" y2="58" stroke="#3a3a3a" stroke-dasharray="3 4" marker-end="url(#ah2)"/>
+      <text x="405" y="48" text-anchor="middle" fill="#666a72" font-size="10">hit</text>
+      <rect x="440" y="30" width="130" height="56" rx="8" fill="#0a0a0a" stroke="#333"/>
+      <text x="505" y="62" text-anchor="middle" fill="#9a9da5" font-size="12">return value</text>
+      <path d="M290 86 V128" fill="none" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <text x="305" y="114" fill="#666a72" font-size="10">miss</text>
+      <rect x="60" y="140" width="770" height="180" rx="12" fill="none" stroke="#333" stroke-dasharray="5 5"/>
+      <text x="80" y="165" fill="#9a9da5" font-size="11">for each SSTable &mdash; newest &rarr; oldest</text>
+      <rect x="90" y="188" width="180" height="62" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="180" y="212" text-anchor="middle" fill="#5df29a" font-size="12">bloom.contains(k)?</text>
+      <text x="180" y="229" text-anchor="middle" fill="#666a72" font-size="10">double hash h1 + i&middot;h2</text>
+      <text x="180" y="278" text-anchor="middle" fill="#e2564d" font-size="10">no &rarr; skip file entirely</text>
+      <line x1="270" y1="219" x2="320" y2="219" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <text x="295" y="209" text-anchor="middle" fill="#666a72" font-size="10">maybe</text>
+      <rect x="330" y="188" width="190" height="62" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="425" y="212" text-anchor="middle" fill="#5df29a" font-size="12">sparse .idx search</text>
+      <text x="425" y="229" text-anchor="middle" fill="#666a72" font-size="10">upper_bound &rarr; byte offset</text>
+      <line x1="520" y1="219" x2="570" y2="219" stroke="#5df29a" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <rect x="580" y="188" width="215" height="62" rx="8" fill="#0f0f0f" stroke="#5df29a"/>
+      <text x="687" y="212" text-anchor="middle" fill="#5df29a" font-size="12">seek + forward scan</text>
+      <text x="687" y="229" text-anchor="middle" fill="#666a72" font-size="10">early exit when cmp &gt; 0</text>
+      <text x="687" y="278" text-anchor="middle" fill="#666a72" font-size="10">&le; 32 entries per probe</text>
+      <text x="60" y="362" fill="#666a72" font-size="10">a tombstone found at any layer means the key reads as deleted &mdash; the space is reclaimed at the next compaction</text>
+      </g>
+    </svg>
+    <p class="note" id="arch-note">The write path is append-only at every step: the WAL is a sequential file, the memtable flush is one sorted streaming write, and compaction reads k files forward-only through a min-heap. Nothing seeks backwards on the write side &mdash; that is where the throughput comes from.</p>
+  </div>
+</div>
+
+<div id="pane-code" class="pane">
+  <p class="note" style="margin:0 0 14px;">compaction.cpp &mdash; the streaming k-way merge. The heap holds one entry per table, so memory is O(k) regardless of how large the tables are. Duplicate keys resolve to the highest table index (most recent), and tombstones are dropped on the way out.</p>
+  <pre class="code"><span class="cm">// K-way merge: process entries in sorted order, O(k) memory</span>
+<span class="kw">while</span> (!min_heap.empty()) {
+    <span class="ty">MergeEntry</span> current = min_heap.top();
+    min_heap.pop();
+
+    <span class="cm">// Only write if this is a new key (heap order =&gt; most recent first)</span>
+    <span class="kw">if</span> (current.key != last_key) {
+        <span class="kw">if</span> (current.value != mem_table::tombstone) {
+            <span class="ty">size_t</span> key_size   = current.key.size();
+            <span class="ty">size_t</span> value_size = current.value.size();
+            output.<span class="fn">write</span>(<span class="kw">reinterpret_cast</span>&lt;<span class="kw">const char</span>*&gt;(&amp;key_size),   <span class="kw">sizeof</span>(<span class="ty">size_t</span>));
+            output.<span class="fn">write</span>(<span class="kw">reinterpret_cast</span>&lt;<span class="kw">const char</span>*&gt;(&amp;value_size), <span class="kw">sizeof</span>(<span class="ty">size_t</span>));
+            output.<span class="fn">write</span>(current.key.data(),   key_size);
+            output.<span class="fn">write</span>(current.value.data(), value_size);
+            entries_written++;
+        }
+        last_key = current.key;
+    }
+
+    <span class="cm">// Advance whichever iterator produced this entry</span>
+    <span class="ty">size_t</span> iter_idx = current.table_index;
+    <span class="kw">if</span> (iterators[iter_idx]-&gt;<span class="fn">next</span>()) {
+        min_heap.<span class="fn">push</span>({ iterators[iter_idx]-&gt;<span class="fn">key</span>(),
+                        iterators[iter_idx]-&gt;<span class="fn">value</span>(), iter_idx });
+    }
+}</pre>
+  <p class="note" style="margin-top:20px;">bloom_filter.h &mdash; double hashing derives every probe from a single std::hash call by rotating the 64-bit result and forcing it odd, so the second hash is always coprime with the bit-array size.</p>
+  <pre class="code"><span class="ty">std::pair</span>&lt;<span class="ty">size_t</span>, <span class="ty">size_t</span>&gt; <span class="fn">hash</span>(<span class="kw">const</span> <span class="ty">slice</span>&amp; key) <span class="kw">const</span> {
+    <span class="ty">std::string</span> key_str = key.toString();
+    <span class="ty">size_t</span> h1 = <span class="ty">std::hash</span>&lt;<span class="ty">std::string</span>&gt;{}(key_str);
+    <span class="ty">size_t</span> h2 = (h1 &gt;&gt; <span class="st">32</span>) | (h1 &lt;&lt; <span class="st">32</span>);
+    h2 = h2 | <span class="st">1</span>;              <span class="cm">// make sure h2 is odd</span>
+    <span class="kw">return</span> {h1, h2};
+}</pre>
+</div>
+
+<script>
+function tab(btn,id){
+  btn.parentElement.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('pane-'+id).classList.add('on');
+}
+function archPath(btn,which){
+  btn.parentElement.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('svg-write').style.display = which==='write'?'':'none';
+  document.getElementById('svg-read').style.display  = which==='read'?'':'none';
+  document.getElementById('arch-note').textContent = which==='write'
+    ? 'The write path is append-only at every step: the WAL is a sequential file, the memtable flush is one sorted streaming write, and compaction reads k files forward-only through a min-heap. Nothing seeks backwards on the write side \u2014 that is where the throughput comes from.'
+    : 'Reads pay for write speed, so every layer exists to shrink the search: the bloom filter skips whole files, the sparse index skips to within 32 entries, and sorted order lets the scan bail the moment it passes the key.';
+}
+(function(){
+  var el=document.getElementById('loglines'); if(!el) return;
+  var keys=['sensor_2a','order_883','user_23','metric_7f','session_c1','event_09','cart_44','trace_b2'];
+  var mt=0, sst=0, t0=Date.now();
+  function ts(){ var d=new Date(Date.now()-t0+3600000);
+    return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')+':'+String(d.getUTCSeconds()).padStart(2,'0'); }
+  function push(h){ el.innerHTML += '<div>'+h+'</div>'; while(el.children.length>8) el.removeChild(el.firstChild); }
+  (function tick(){
+    var k=keys[Math.floor(Math.random()*keys.length)];
+    mt++;
+    push(ts()+' <span class="cy">[STORAGE]</span> Appending key="'+k+'" to WAL (durable before ack)');
+    push(ts()+' <span class="cy">[STORAGE]</span> MemTable rebalanced. Elements: '+mt+'/6');
+    if(mt>=6){
+      mt=0; sst++;
+      push(ts()+' <span class="cy">[STORAGE]</span> <span class="hl">MemTable limit reached. Sorted flush to sstable_'+sst+'.sst in '+(120+Math.floor(Math.random()*90))+'\u00b5s</span>');
+      if(sst>=4){
+        push(ts()+' <span class="cy">[COMPACT]</span> <span class="hl">4 SSTables reached \u2014 background streaming_merge started</span>');
+        push(ts()+' <span class="cy">[COMPACT]</span> k-way merge complete, tombstones dropped, 1 sorted run remains');
+        sst=1;
+      }
+    }
+    document.getElementById('mt-count').textContent = mt+'/6';
+    document.getElementById('sst-count').textContent = sst;
+    setTimeout(tick, 700+Math.random()*900);
+  })();
+})();
+</script>
+
+</main>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>contact — Cheng-Yuan Li</title>
+<meta name="description" content="How to reach me.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="contact — Cheng-Yuan Li">
+<meta property="og:description" content="How to reach me.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="contact — Cheng-Yuan Li">
+<meta name="twitter:description" content="How to reach me.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script>window.SITE_ROOT="";window.SITE_PAGE="contact";</script>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<main>
+
+<div class="sec-head"><h1>contact.sh</h1><span class="meta">exit 0</span></div>
+
+<div class="livestat" id="livestat" style="margin-top:24px;">
+  <span class="dot"></span>
+  <span>usually replies within a day &middot; <b id="localtime">--:--</b> local (<span id="localzone">tz</span>)</span>
+</div>
+
+<p class="lede" style="margin:0 0 28px;">Open to internships and systems-flavored conversations. The fastest channel is email; the most informative one is the commit history.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;max-width:520px;">
+  <a class="btn primary" href="mailto:chengyuan@gatech.edu">email me</a>
+  <a class="btn" href="https://github.com/1129Chengyuan" target="_blank" rel="noopener">github &#8599;</a>
+  <a class="btn" href="https://www.linkedin.com/in/cheng-yuan-li/" target="_blank" rel="noopener">linkedin &#8599;</a>
+</div>
+<pre class="code" style="margin-top:34px;max-width:620px;"><span class="cm">#!/bin/bash</span>
+<span class="cm"># the short version</span>
+<span class="fn">echo</span> <span class="st">"cs student, data engineering track"</span>
+<span class="fn">echo</span> <span class="st">"builds storage engines and pipelines"</span>
+<span class="fn">echo</span> <span class="st">"looking for: summer internship"</span>
+<span class="fn">echo</span> <span class="st">"reachable at: chengyuan@gatech.edu"</span></pre>
+
+</main>
+
+<script src="assets/site.js"></script>
+<script>
+(function(){
+  var t=document.getElementById('localtime'), z=document.getElementById('localzone');
+  if(!t) return;
+  function tick(){
+    var d=new Date();
+    t.textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    if(z){ try{ z.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local'; }catch(e){ z.textContent='local'; } }
+  }
+  tick(); setInterval(tick, 30000);
+})();
+</script>
+</body>
+</html>

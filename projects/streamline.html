@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streamline — Cheng-Yuan Li</title>
+<meta name="description" content="Real-time ETL with schema validation between ingest and storage.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Streamline — Cheng-Yuan Li">
+<meta property="og:description" content="Real-time ETL with schema validation between ingest and storage.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Streamline — Cheng-Yuan Li">
+<meta name="twitter:description" content="Real-time ETL with schema validation between ingest and storage.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script>window.SITE_ROOT="../";window.SITE_PAGE="streamline";</script>
+</head>
+<body>
+<div class="scanbeam" aria-hidden="true"></div>
+
+<main>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
+  <div class="ico lg wip" aria-hidden="true">&#8646;</div>
+  <div>
+    <h1>Streamline</h1>
+    <div style="font-size:12px;color:var(--red);">etl pipeline &middot; <i class="dot r"></i> in progress</div>
+  </div>
+</div>
+
+<div id="p-roadmap"></div>
+<div id="p-timeline"></div>
+
+<div class="wip-banner">Tracked and under active build. Everything the tree, graph, and terminal show for this node comes from its entry in <b>assets/site.js</b> &mdash; edit there and it updates everywhere.</div>
+
+<div class="tabs" role="tablist">
+  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button role="tab" onclick="tab(this,'arch')">architecture</button>
+  <button role="tab" onclick="tab(this,'code')">code</button>
+</div>
+
+<div id="pane-ov" class="pane on">
+  <div class="two">
+    <div>
+      <p class="lede">The transform stage between ingest and storage: schema validation, light enrichment, and batching into Arrow record batches before the write. Built around one rule &mdash; bad data gets rejected at the boundary, loudly, rather than quietly corrupting everything downstream.</p>
+      <div class="tags" style="margin-top:22px;"><span>Python</span><span>Arrow</span><span>schema</span></div>
+    </div>
+    <div>
+      <div class="stat4">
+        <div><div class="k">EVENTS</div><div class="v">&mdash;</div></div>
+        <div><div class="k">STATUS</div><div class="v">building</div></div>
+      </div>
+      <a class="btn primary" id="src-link" style="display:block;text-align:center;">view source &#8599;</a>
+    </div>
+  </div>
+</div>
+
+<div id="pane-arch" class="pane">
+  <div class="emptybox">
+    <div class="big">&#9671;</div>
+    architecture diagram &mdash; <b>not written yet</b><br>
+    the validate &rarr; enrich &rarr; batch flow, and where a rejected record goes, lands here.
+  </div>
+</div>
+
+<div id="pane-code" class="pane">
+  <div class="emptybox">
+    <div class="big">{ }</div>
+    code excerpt &mdash; <b>not published yet</b><br>
+    the schema-check-or-reject step is the interesting decision &mdash; it goes here.
+  </div>
+</div>
+
+</main>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
