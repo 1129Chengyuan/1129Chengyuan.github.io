@@ -4,7 +4,8 @@
       "Bash(python3 genascii.py)",
       "Bash(awk '{ if \\(length > m\\) m=length } END { print \"maxcol=\"m }' ascii.txt)",
       "Bash(python3 -)",
-      "Bash(node --check assets/site.js)"
+      "Bash(node --check assets/site.js)",
+      "Bash(pkill *)"
     ]
   }
 }

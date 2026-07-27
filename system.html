@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=20260723">
+<link rel="stylesheet" href="assets/site.css?v=20260730">
 <script>window.SITE_ROOT="";window.SITE_PAGE="system";</script>
 </head>
 <body>
@@ -26,13 +26,20 @@
 
 <div class="sys-head">
   <h1>system.topology</h1>
-  <span class="meta">hover a node to inspect &middot; click to open &middot; type <b style="color:var(--green)">cd &lt;name&gt;</b> or <b style="color:var(--green)">view orbit</b> below</span>
+  <span class="meta">hover a node to inspect &middot; click to open &middot; type <b style="color:var(--green)">cd &lt;name&gt;</b>, <b style="color:var(--green)">view orbit</b>, or <b style="color:var(--green)">run bfs</b> below</span>
 </div>
 
 <div class="frame frame-bleed">
   <div class="topbar">
     <span class="cmd">$ system --topology --live</span>
     <div class="topbar-r">
+      <div class="algo-bar" id="algo-bar" role="group" aria-label="Graph algorithms">
+        <button type="button" data-algo="bfs">bfs</button>
+        <button type="button" data-algo="dfs">dfs</button>
+        <button type="button" data-algo="dijkstra">dijkstra</button>
+        <button type="button" data-algo="reset">reset</button>
+      </div>
+      <span class="algo-readout" id="algo-readout"></span>
       <div class="mode-toggle" role="group" aria-label="Presentation mode">
         <button type="button" data-mode="graph" class="active">graph</button>
         <button type="button" data-mode="orbit">orbit</button>
@@ -43,7 +50,9 @@
   </div>
   <div class="floor" aria-hidden="true"></div>
   <div class="particles" id="particles" aria-hidden="true"></div>
+  <canvas id="orbit-fx" aria-hidden="true"></canvas>
   <div id="scene" aria-hidden="true"></div>
+  <div id="algo-set" role="status" aria-live="polite"></div>
   <div class="vignette" aria-hidden="true"></div>
   <div id="topo-preview" role="status">
     <div class="t"></div><div class="d"></div>
@@ -53,6 +62,6 @@
 
 </main>
 
-<script src="assets/site.js?v=20260723"></script>
+<script src="assets/site.js?v=20260730"></script>
 </body>
 </html>
