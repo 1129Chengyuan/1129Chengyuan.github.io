@@ -290,6 +290,23 @@ main:has(.frame-bleed){max-width:1600px;height:calc(100vh - var(--head) - var(--
 /* full-bleed graph frame: flexes to fill all remaining space */
 .frame-bleed{flex:1;min-height:0;}
 
+/* on /system the directory is a pinned, always-visible panel, not an overlay */
+body:has(.frame-bleed) .side{transform:none;box-shadow:none;}
+body:has(.frame-bleed) .side-backdrop{display:none;}
+body:has(.frame-bleed) #sidetoggle{display:none;}
+body:has(.frame-bleed) main:has(.frame-bleed){margin-left:var(--side);margin-right:0;}
+body:has(.frame-bleed) .dock{left:var(--side);}
+
+@media (max-width:900px){
+  /* too little room to pin on small screens — fall back to the overlay */
+  body:has(.frame-bleed) .side{transform:translateX(-100%);box-shadow:2px 0 24px rgba(0,0,0,.5);}
+  body:has(.frame-bleed) .side.open{transform:none;}
+  body:has(.frame-bleed) .side-backdrop{display:block;}
+  body:has(.frame-bleed) #sidetoggle{display:block;}
+  body:has(.frame-bleed) main:has(.frame-bleed){margin-left:auto;}
+  body:has(.frame-bleed) .dock{left:0;}
+}
+
 /* topbar: command on the left, mode toggle + legend + status on the right */
 .topbar-r{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:flex-end;}
 .mode-toggle{display:inline-flex;border:1px solid var(--line2);border-radius:7px;overflow:hidden;}
