@@ -56,13 +56,14 @@ var PROJECTS = [
     tags:['BigQuery','Dataform','Cloud Run'],
     roadmap:'next: keep tuning the rewrite heuristics and reservation routing rules' },
 
-  { id:'coreutil', name:'CoreUtil', file:'coreutil.html', icon:'▣', status:'wip',
-    cat:'shared library',
-    desc:'Shared serialization and networking primitives used across the other projects.',
-    stats:[['USED BY','—'],['STATUS','api shifting']], pos:{x:-150,y:70}, gh:null,
-    started:'2026-01', lastTouched:'2026-06-15', loc:900,
-    tags:['C++20','serialization','sockets'],
-    roadmap:'next: freeze the wire format, then add version negotiation so old peers stay readable' }
+  { id:'portfolio', name:'This Site', file:'portfolio.html', icon:'▣', status:'done', real:true,
+    cat:'portfolio · vanilla JS',
+    desc:'This portfolio itself: a dependency-free, no-build multi-page site where two arrays in one JS file drive the tree, the grid, the topology graph, and the terminal.',
+    stats:[['PAGES','11'],['STATUS','deployed']], pos:{x:-150,y:70},
+    gh:'https://github.com/1129Chengyuan/1129Chengyuan.github.io',
+    started:'2026-07', lastTouched:'2026-08-07', loc:1517,
+    tags:['HTML','CSS','JavaScript','GitHub Pages'],
+    roadmap:'next: keep every new project entry data-driven instead of hand-wiring another page' }
 ];
 
 var R = window.SITE_ROOT || '';

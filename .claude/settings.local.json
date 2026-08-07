@@ -5,7 +5,10 @@
       "Bash(awk '{ if \\(length > m\\) m=length } END { print \"maxcol=\"m }' ascii.txt)",
       "Bash(python3 -)",
       "Bash(node --check assets/site.js)",
-      "Bash(pkill *)"
+      "Bash(pkill *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
