@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PredictMarketPipeline — Cheng-Yuan Li</title>
+<meta name="description" content="Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PredictMarketPipeline — Cheng-Yuan Li">
+<meta property="og:description" content="Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PredictMarketPipeline — Cheng-Yuan Li">
+<meta name="twitter:description" content="Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer.">
+<meta name="theme-color" content="#f7f7f4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=20261002-2">
+<script>window.SITE_ROOT="../";window.SITE_PAGE="predictmarket";</script>
+</head>
+<body>
+
+<main>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
+  <div class="ico lg wip" aria-hidden="true">&#8677;</div>
+  <div>
+    <h1>PredictMarketPipeline</h1>
+    <div style="font-size:12px;color:var(--red);">market-data ingestion &middot; async Python &middot; <i class="dot r"></i> in progress</div>
+  </div>
+</div>
+
+<div id="p-roadmap"></div>
+<div id="p-timeline"></div>
+
+<div class="wip-banner">Ingestion layer only, so far: the Bronze layer is built and has been run by hand against Kalshi's demo environment. No scheduler, no Silver/Gold, no tests yet. The repository is private.</div>
+
+<div class="tabs" role="tablist">
+  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button role="tab" onclick="tab(this,'arch')">architecture</button>
+  <button role="tab" onclick="tab(this,'dec')">decisions</button>
+</div>
+
+<div id="pane-ov" class="pane on">
+  <div class="two">
+    <div>
+      <p class="lede">An async Python pipeline that ingests prediction-market data from Kalshi's API into a raw Bronze layer: markets, trades, order books, and historical candlesticks. It is a learning project for async Python and data-engineering fundamentals, and the foundation for a personal trading strategy. Every request goes through one client method that owns rate limiting, RSA-PSS signing, and retry policy; every record lands in newline-delimited JSON, partitioned by the day it was received.</p>
+      <div class="tags" style="margin-top:22px;"><span>Python</span><span>asyncio</span><span>aiohttp</span><span>token bucket</span><span>medallion</span></div>
+    </div>
+    <div>
+      <div class="stat4">
+        <div><div class="k">LAYER</div><div class="v">Bronze</div></div>
+        <div><div class="k">RETRIES</div><div class="v">&le; 3</div></div>
+        <div><div class="k">RESUME MODES</div><div class="v">3</div></div>
+        <div><div class="k">STATUS</div><div class="v">building</div></div>
+      </div>
+      <a class="btn primary" id="src-link" style="display:block;text-align:center;">view source &#8599;</a>
+    </div>
+  </div>
+</div>
+
+<div id="pane-arch" class="pane">
+  <div class="archbox">
+    <svg width="100%" viewBox="0 0 860 400" style="min-width:760px;" role="img" aria-label="Request path from backfill scripts through the client's rate limiter, signing, and retry loop into the Bronze writer">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#2f9e6e" stroke-width="1.6" stroke-linecap="round"/></marker></defs>
+      <g font-family="JetBrains Mono, monospace">
+      <rect x="20" y="30" width="170" height="70" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
+      <text x="105" y="56" text-anchor="middle" fill="#1f2321" font-size="12">backfill_*.py</text>
+      <text x="105" y="74" text-anchor="middle" fill="#7a7f7b" font-size="10">one script per entity</text>
+      <text x="105" y="89" text-anchor="middle" fill="#7a7f7b" font-size="10">markets &middot; trades &middot; books</text>
+      <line x1="190" y1="65" x2="236" y2="65" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <rect x="246" y="20" width="400" height="230" rx="10" fill="none" stroke="#c9cbc7" stroke-dasharray="4 4"/>
+      <text x="262" y="40" fill="#5b605d" font-size="11">KalshiClient._request()</text>
+      <rect x="262" y="52" width="170" height="52" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="347" y="75" text-anchor="middle" fill="#2f9e6e" font-size="12">TokenBucket.acquire()</text>
+      <text x="347" y="92" text-anchor="middle" fill="#7a7f7b" font-size="10">continuous refill &middot; live limits</text>
+      <line x1="432" y1="78" x2="462" y2="78" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="470" y="52" width="160" height="52" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="550" y="75" text-anchor="middle" fill="#2f9e6e" font-size="12">sign_request()</text>
+      <text x="550" y="92" text-anchor="middle" fill="#7a7f7b" font-size="10">RSA-PSS &middot; per attempt</text>
+      <path d="M550 104 V128" fill="none" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="470" y="136" width="160" height="44" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
+      <text x="550" y="163" text-anchor="middle" fill="#1f2321" font-size="12">aiohttp request</text>
+      <path d="M470 158 H420" fill="none" stroke="#b0751c" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="262" y="136" width="150" height="44" rx="8" fill="#ffffff" stroke="#b0751c"/>
+      <text x="337" y="155" text-anchor="middle" fill="#b0751c" font-size="11">429 / 5xx / timeout</text>
+      <text x="337" y="170" text-anchor="middle" fill="#7a7f7b" font-size="10">backoff + jitter</text>
+      <path d="M337 136 V112" fill="none" stroke="#b0751c" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ah)"/>
+      <text x="262" y="204" fill="#7a7f7b" font-size="10">3rd failure &rarr; KalshiRetriesExhaustedError</text>
+      <text x="262" y="222" fill="#7a7f7b" font-size="10">400 / 404 &rarr; KalshiAPIError (no retry)</text>
+      <text x="262" y="240" fill="#7a7f7b" font-size="10">both subclass KalshiError</text>
+      <path d="M630 158 H690 V290" fill="none" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+      <text x="698" y="230" fill="#7a7f7b" font-size="10">2xx</text>
+
+      <rect x="560" y="300" width="280" height="76" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="700" y="324" text-anchor="middle" fill="#2f9e6e" font-size="12">BronzeWriter</text>
+      <text x="700" y="342" text-anchor="middle" fill="#5b605d" font-size="10">bronze/kalshi/{entity}/date=YYYY-MM-DD/</text>
+      <text x="700" y="358" text-anchor="middle" fill="#7a7f7b" font-size="10">data.jsonl &middot; + fetched_at, source</text>
+      <line x1="560" y1="338" x2="470" y2="338" stroke="#b8bbb7" stroke-dasharray="3 4"/>
+      <rect x="290" y="316" width="180" height="44" rx="8" fill="#f7f7f4" stroke="#c9cbc7"/>
+      <text x="380" y="335" text-anchor="middle" fill="#5b605d" font-size="11">data/state/</text>
+      <text x="380" y="351" text-anchor="middle" fill="#7a7f7b" font-size="10">checkpoints &middot; _SUCCESS</text>
+      <rect x="20" y="300" width="230" height="76" rx="8" fill="none" stroke="#c9cbc7" stroke-dasharray="4 4"/>
+      <text x="135" y="326" text-anchor="middle" fill="#7a7f7b" font-size="11">Silver / Gold</text>
+      <text x="135" y="344" text-anchor="middle" fill="#7a7f7b" font-size="10">Databricks &middot; Delta Lake</text>
+      <text x="135" y="360" text-anchor="middle" fill="#7a7f7b" font-size="10">not built yet</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<div id="pane-dec" class="pane">
+  <div class="two">
+    <div>
+      <p class="lede"><b>A hand-rolled token bucket.</b> Continuous refill, an <code>asyncio.Lock</code> held only around the check-and-decide step and released before any sleep, and a retry loop rather than recursion. Building it surfaced a self-deadlock from re-acquiring a non-reentrant lock and a double-release error. On startup the client reads the account's real limits and rebuilds the bucket, instead of trusting a guessed tier.</p>
+      <p class="lede" style="margin-top:16px;"><b>Retries live in one place.</b> Every endpoint is a thin wrapper over one request method that owns rate limiting, signing, and status-code branching. Exhausted retries raise instead of returning <code>None</code>, so a failure surfaces where it happened rather than as a <code>TypeError</code> three calls later. The signature is recomputed inside the retry loop because it embeds a timestamp.</p>
+      <p class="lede" style="margin-top:16px;"><b>Bronze is plain JSONL, partitioned by ingestion date.</b> Writing never has to inspect the payload to pick a file, and once a day passes its file is finished for good. A database was considered and rejected, including <a href="smalldb.html">SmallDB</a>: Bronze is written and read sequentially in full, with no key lookups for an LSM tree to speed up.</p>
+    </div>
+    <div>
+      <p class="lede"><b>Resuming after a crash, three ways.</b> Trades walk forward in one-hour windows with a checkpoint written only after the window is flushed to disk. The first version resumed from the newest stored timestamp and silently skipped data, because the API returns trades newest-first. One-shot historical jobs use completion markers; candlesticks use a set difference against what Bronze already holds.</p>
+      <p class="lede" style="margin-top:16px;"><b>Markets are state, trades are events.</b> "Everything after timestamp X" fully describes new trades, but a known market can move from closed to settled without being new. A timestamp cutoff would miss exactly the transitions the project cares about, so markets get a separate settlement worklist.</p>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script src="../assets/site.js?v=20261002-2"></script>
+</body>
+</html>

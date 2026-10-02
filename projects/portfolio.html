@@ -4,23 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>This Site — Cheng-Yuan Li</title>
-<meta name="description" content="A dependency-free, no-build portfolio site: two arrays in one JS file drive the tree, the grid, the topology graph, and the terminal.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<meta name="description" content="A dependency-free, no-build portfolio site: one data file drives a 3D ontology of roles, projects, and skills, plus every case study.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:title" content="This Site — Cheng-Yuan Li">
-<meta property="og:description" content="A dependency-free, no-build portfolio site: two arrays in one JS file drive the tree, the grid, the topology graph, and the terminal.">
+<meta property="og:description" content="A dependency-free, no-build portfolio site: one data file drives a 3D ontology of roles, projects, and skills, plus every case study.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="This Site — Cheng-Yuan Li">
-<meta name="twitter:description" content="A dependency-free, no-build portfolio site: two arrays in one JS file drive the tree, the grid, the topology graph, and the terminal.">
-<meta name="theme-color" content="#050505">
+<meta name="twitter:description" content="A dependency-free, no-build portfolio site: one data file drives a 3D ontology of roles, projects, and skills, plus every case study.">
+<meta name="theme-color" content="#f7f7f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20260807">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=20261002-2">
 <script>window.SITE_ROOT="../";window.SITE_PAGE="portfolio";</script>
 </head>
 <body>
-<div class="scanbeam" aria-hidden="true"></div>
 
 <main>
 
@@ -44,20 +43,20 @@
 <div id="pane-ov" class="pane on">
   <div class="two">
     <div>
-      <p class="lede">The page you're on right now. A static, dependency-free, multi-page portfolio &mdash; no build step, no package manager, no framework. Every page shares one injected header, directory-tree sidebar, and terminal dock, and nearly everything you can see or type here (this node included) is read out of two arrays in a single JS file rather than hand-written per page.</p>
-      <div class="tags" style="margin-top:22px;"><span>HTML</span><span>CSS</span><span>JavaScript</span><span>GitHub Pages</span></div>
+      <p class="lede">The page you're on right now. A static, dependency-free site with no build step, no package manager, and no framework. The home page models my work as an ontology: me, the roles I've held, and the projects I've built, as 3D objects on a slab with typed links between them, tethered to the skills each one uses. Every page reads the same data file, so nothing about a project is typed in two places.</p>
+      <div class="tags" style="margin-top:22px;"><span>HTML</span><span>CSS</span><span>JavaScript</span><span>three.js</span><span>GitHub Pages</span></div>
     </div>
     <div>
       <div class="stat4">
-        <div><div class="k">PAGES</div><div class="v">11</div></div>
+        <div><div class="k">PAGES</div><div class="v">8</div></div>
         <div><div class="k">STATUS</div><div class="v">deployed</div></div>
       </div>
       <a class="btn primary" id="src-link" style="display:block;text-align:center;" target="_blank" rel="noopener">view source &#8599;</a>
       <div class="side-label" style="margin-top:26px;">FILES</div>
-      <div style="font-size:12px;color:var(--fg2);line-height:1.9;">
-        assets/site.js &middot; STATS + PROJECTS, all shared behavior<br>
-        assets/site.css &middot; every style, single file<br>
-        system.html &middot; topology graph / orbit view<br>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.9;">
+        assets/site.js &middot; PROJECTS, ROLES, SKILLS, shared helpers<br>
+        assets/ontology.js &middot; the 3D ontology on the home page<br>
+        assets/site.css &middot; every style for the other pages<br>
         projects/*.html &middot; one page per project, body only
       </div>
     </div>
@@ -66,29 +65,27 @@
 
 <div id="pane-arch" class="pane">
   <div class="emptybox" style="text-align:left;padding:22px 26px;">
-    <p style="margin-bottom:14px;">Every page except the title card (<code>index.html</code>) renders the same chrome &mdash; header, sidebar, terminal dock &mdash; injected once by <b>mountChrome()</b> in <code>site.js</code>, so the shell lives in exactly one place instead of being copy-pasted across every HTML file.</p>
-    <p style="margin-bottom:14px;">Two data structures at the top of <code>site.js</code> feed nearly everything on the site: <b>STATS</b> holds every benchmark number shown anywhere (its <code>totals</code> field is computed at load from the project list, never hand-edited), and <b>PROJECTS</b> is the single array that drives the sidebar tree, the project grid, this topology graph, hover previews, the topbar status line, and the terminal's <code>ls</code> / <code>cd</code> / <code>status</code> commands. Adding an entry to that array is what made this very node appear in the tree, the graph, and the terminal all at once.</p>
-    <p style="margin-bottom:0;">Each page sets two globals &mdash; <code>SITE_ROOT</code> and <code>SITE_PAGE</code> &mdash; before loading the shared script, which is how the shared code knows where the page lives and derives the terminal's prompt path automatically when a page is renamed.</p>
+    <p style="margin-bottom:14px;">The data lives in <code>site.js</code>: <b>PROJECTS</b>, <b>ROLES</b>, and <b>SKILLS</b>. A project lists the skills it uses and any true links it has, like Dataform Slots being <i>built at</i> Gordon Food Service. The ontology, the case-study grid, the about page, and each case study's roadmap all read from those three arrays.</p>
+    <p style="margin-bottom:14px;"><code>ontology.js</code> only decides presentation: where each object sits on the slab and which line-art model draws it. The models are built from boxes and cylinders in three.js, outlined with edge lines and an inverted-hull silhouette, and lit flat so they read like an illustration. Labels, link pills, and the property panel are HTML positioned over the canvas each frame, so text stays crisp.</p>
+    <p style="margin-bottom:0;">The skill lines leave from ports on the slab's back edge, ordered left to right like their chips, so they fan up without crossing. Hovering an object lights its links and skills; hovering a skill lights the objects that use it.</p>
   </div>
 </div>
 
 <div id="pane-code" class="pane">
-  <p class="note" style="margin:0 0 14px;">site.js &mdash; adding a project is one array entry; the tree, grid, graph, and terminal all pick it up without further wiring.</p>
+  <p class="note" style="margin:0 0 14px;">site.js: a project is one entry. Its skills and links are what the ontology draws.</p>
   <pre class="code"><span class="kw">var</span> PROJECTS = [
-    { <span class="fn">id</span>:<span class="st">'portfolio'</span>, <span class="fn">name</span>:<span class="st">'This Site'</span>, <span class="fn">file</span>:<span class="st">'portfolio.html'</span>,
-      <span class="fn">status</span>:<span class="st">'done'</span>, <span class="fn">real</span>:<span class="kw">true</span>,
-      <span class="fn">gh</span>:<span class="st">'https://github.com/1129Chengyuan/1129Chengyuan.github.io'</span>,
-      <span class="cm">// … tags, dates, roadmap — everything else derives from this</span>
+    { <span class="fn">id</span>:<span class="st">'dataform-slots-optimization'</span>, <span class="fn">status</span>:<span class="st">'done'</span>,
+      <span class="fn">skills</span>:[<span class="st">'GCP'</span>, <span class="st">'SQL'</span>, <span class="st">'REST APIs'</span>],
+      <span class="fn">related</span>:[[<span class="st">'gfs'</span>, <span class="st">'Built at'</span>]],
+      <span class="cm">// … name, desc, stats, roadmap</span>
     }
 ];</pre>
-  <p class="note" style="margin-top:20px;">deriveTotals() &mdash; STATS.totals is never hand-edited; it's recomputed from PROJECTS every time the page loads.</p>
-  <pre class="code"><span class="kw">function</span> <span class="fn">deriveTotals</span>() {
-    <span class="kw">var</span> done = PROJECTS.<span class="fn">filter</span>(<span class="kw">function</span>(p){ <span class="kw">return</span> p.status===<span class="st">'done'</span>; }).length;
-    <span class="kw">var</span> loc = PROJECTS.<span class="fn">reduce</span>(<span class="kw">function</span>(a,p){ <span class="kw">return</span> a + (p.loc||<span class="st">0</span>); }, <span class="st">0</span>);
-    <span class="kw">var</span> latest = PROJECTS.<span class="fn">map</span>(<span class="kw">function</span>(p){ <span class="kw">return</span> p.lastTouched; })
-                         .<span class="fn">filter</span>(Boolean).<span class="fn">sort</span>().<span class="fn">slice</span>(-<span class="st">1</span>)[<span class="st">0</span>] || <span class="st">'—'</span>;
-    STATS.totals = { <span class="fn">projects</span>: PROJECTS.length, <span class="fn">done</span>: done, <span class="fn">latest</span>: latest };
-}</pre>
+  <p class="note" style="margin-top:20px;">ontology.js: links come straight from the data. Each role links to me, and each project links to me unless it was built at a role.</p>
+  <pre class="code">ROLES.<span class="fn">forEach</span>(r =&gt; <span class="fn">link</span>(<span class="st">'you'</span>, r.id, ROLE_VERB[r.id]));
+PROJ.<span class="fn">forEach</span>(p =&gt; {
+  (p.related || []).<span class="fn">forEach</span>(([to, verb]) =&gt; <span class="fn">link</span>(p.id, to, verb));
+  <span class="kw">if</span> (!viaRole(p)) <span class="fn">link</span>(<span class="st">'you'</span>, p.id, p.status === <span class="st">'done'</span> ? <span class="st">'Built'</span> : <span class="st">'Building'</span>);
+});</pre>
 </div>
 
 <script>
@@ -102,6 +99,6 @@ function tab(btn,id){
 
 </main>
 
-<script src="../assets/site.js?v=20260807"></script>
+<script src="../assets/site.js?v=20261002-2"></script>
 </body>
 </html>

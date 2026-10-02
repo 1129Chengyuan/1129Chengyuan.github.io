@@ -5,22 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dataform Slots Optimization — Cheng-Yuan Li</title>
 <meta name="description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Dataform Slots Optimization — Cheng-Yuan Li">
 <meta property="og:description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Dataform Slots Optimization — Cheng-Yuan Li">
 <meta name="twitter:description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
-<meta name="theme-color" content="#050505">
+<meta name="theme-color" content="#f7f7f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20260807">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=20261002-2">
 <script>window.SITE_ROOT="../";window.SITE_PAGE="dataform-slots";</script>
 <style>
 /* page-local additions — prefixed to avoid collisions with site.css */
-.dfx{--dfx-accent:var(--green,#5df29a);--dfx-warn:var(--red,#ff6b6b);--dfx-line:rgba(255,255,255,.10);--dfx-panel:rgba(255,255,255,.03)}
+.dfx{--dfx-accent:var(--green,#5df29a);--dfx-warn:var(--red,#ff6b6b);--dfx-line:rgba(31,35,33,.10);--dfx-panel:rgba(31,35,33,.03)}
 .dfx h3{font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:34px 0 12px;opacity:.65;font-weight:500}
 .dfx h3:first-child{margin-top:0}
 .dfx h4{font-size:13px;margin:22px 0 8px;font-weight:700}
@@ -30,7 +30,7 @@
 .dfx code.inl{background:var(--dfx-panel);border:1px solid var(--dfx-line);border-radius:3px;padding:1px 5px;font-size:.92em}
 .dfx table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0 20px;display:block;overflow-x:auto}
 .dfx th{text-align:left;font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:10px;opacity:.55;padding:8px 12px 8px 0;border-bottom:1px solid var(--dfx-line);white-space:nowrap}
-.dfx td{padding:9px 12px 9px 0;border-bottom:1px solid rgba(255,255,255,.055);vertical-align:top;line-height:1.55}
+.dfx td{padding:9px 12px 9px 0;border-bottom:1px solid rgba(31,35,33,.055);vertical-align:top;line-height:1.55}
 .dfx td:first-child,.dfx td:nth-child(2){white-space:nowrap;color:var(--dfx-accent)}
 .dfx ul{margin:0 0 16px;padding-left:18px;line-height:1.7}
 .dfx ul li{margin-bottom:7px}
@@ -56,21 +56,20 @@
 /* pipeline diagram */
 .dfx .diagram{border:1px solid var(--dfx-line);border-radius:6px;background:var(--dfx-panel);padding:20px 18px;margin:6px 0 24px;overflow-x:auto}
 .dfx .diagram svg{width:100%;height:auto;min-width:820px;display:block;font-family:"JetBrains Mono",ui-monospace,monospace}
-.dg-b{fill:none;stroke:rgba(255,255,255,.15);stroke-width:1.5}
+.dg-b{fill:none;stroke:rgba(31,35,33,.15);stroke-width:1.5}
 .dg-b.on{stroke:var(--green,#5df29a)}
-.dg-b.hi{stroke:#e8a33d}
-.dg-t{fill:#e9ede9;font-size:17px;font-weight:500}
+.dg-b.hi{stroke:#b0751c}
+.dg-t{fill:#1f2321;font-size:17px;font-weight:500}
 .dg-t.on{fill:var(--green,#5df29a)}
-.dg-t.hi{fill:#e8a33d}
-.dg-s{fill:rgba(255,255,255,.44);font-size:12px}
+.dg-t.hi{fill:#b0751c}
+.dg-s{fill:rgba(31,35,33,.44);font-size:12px}
 .dg-e{stroke:var(--green,#5df29a);stroke-width:1.6;fill:none}
-.dg-d{stroke:rgba(255,255,255,.22);stroke-width:1.2;stroke-dasharray:4 5;fill:none}
-.dg-l{fill:rgba(255,255,255,.46);font-size:12.5px}
-.dg-cap{fill:rgba(255,255,255,.38);font-size:12.5px}
+.dg-d{stroke:rgba(31,35,33,.22);stroke-width:1.2;stroke-dasharray:4 5;fill:none}
+.dg-l{fill:rgba(31,35,33,.46);font-size:12.5px}
+.dg-cap{fill:rgba(31,35,33,.38);font-size:12.5px}
 </style>
 </head>
 <body>
-<div class="scanbeam" aria-hidden="true"></div>
 
 <main>
 
@@ -466,6 +465,6 @@ for i in range(brace_start, len(raw_content)):
 
 </main>
 
-<script src="../assets/site.js?v=20260807"></script>
+<script src="../assets/site.js?v=20261002-2"></script>
 </body>
 </html>

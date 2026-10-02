@@ -3,121 +3,262 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cheng-Yuan Li — systems engineer</title>
-<meta name="description" content="Data engineering portfolio: storage engines, pipelines, distributed systems.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050505'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='19' font-weight='bold' fill='%235df29a' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Cheng-Yuan Li — systems engineer">
-<meta property="og:description" content="Data engineering portfolio: storage engines, pipelines, distributed systems.">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Cheng-Yuan Li — systems engineer">
-<meta name="twitter:description" content="Data engineering portfolio: storage engines, pipelines, distributed systems.">
-<meta name="theme-color" content="#050505">
+<title>Cheng-Yuan Li — data engineering</title>
+<meta name="description" content="Data engineering portfolio modeled as an ontology: my roles, the projects I've built, and the skills behind them.">
+<meta name="theme-color" content="#f7f7f4">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=20260807">
-<script>window.SITE_ROOT="";window.SITE_PAGE="title";</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f7f4; --panel:#ffffff; --ink:#1f2321; --ink2:#5b605d; --ink3:#949894;
+    --line:rgba(31,35,33,.16); --mint:#a5ebc8; --mint2:#d9f6e7; --mint-ink:#1d5a3f;
+    --done:#3f9a6e; --wip:#c79a3e;
+    --project:#3f7fe8; --role:#7b61e8; --role2:#ece7fd; --grey-pill:#e4e5e1;
+    --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);}
+  body{min-height:100vh;}
+  a{color:inherit;}
+  button{font:inherit;color:inherit;cursor:pointer;}
+  :focus-visible{outline:2px solid var(--done);outline-offset:2px;}
+
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:28px 32px 0;max-width:1280px;margin:0 auto;}
+  .who h1{font-size:20px;font-weight:600;letter-spacing:-.2px;}
+  .who p{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.5;max-width:520px;}
+  .nav{display:flex;gap:8px;}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;text-decoration:none;white-space:nowrap;}
+  .chip:hover{border-color:var(--ink);}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+
+  .wrap{position:relative;max-width:1280px;margin:0 auto;}
+  .stage{position:relative;height:clamp(380px,56vh,620px);touch-action:pan-y;cursor:grab;}
+
+  /* skills: grouped panels above the slab, tethered to the projects that use them */
+  .skills{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:26px 32px 0;margin-bottom:34px;}
+  .group .gname{text-align:center;font-size:11px;font-weight:500;letter-spacing:1.5px;color:var(--ink2);margin-bottom:8px;}
+  .group .box{border:1px solid var(--ink);border-radius:14px;background:var(--panel);padding:12px;min-height:92px;
+    display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-content:center;}
+  .skill{border:1px solid var(--line);background:#f1f3f0;border-radius:7px;padding:5px 10px;font-size:12px;
+    transition:background .2s,border-color .2s,opacity .2s,color .2s;}
+  .skill:hover,.skill.on{background:var(--mint);border-color:#7fcfa6;color:var(--mint-ink);}
+  .skill.solo{background:var(--panel);border-style:dashed;}
+  .skills.focus .skill:not(.on){opacity:.38;}
+  .tethers{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2;}
+  .tethers path{fill:none;stroke:var(--ink3);stroke-width:1.3;stroke-dasharray:1.5 4.5;stroke-linecap:round;opacity:.26;transition:opacity .25s;}
+  .tethers path.on{stroke:var(--ink);opacity:.95;animation:flow 1.2s linear infinite;}
+  .tethers circle{fill:var(--ink3);opacity:.5;transition:opacity .25s;}
+  .tethers circle.on{fill:var(--ink);opacity:1;}
+  .tethers.focus circle:not(.on){opacity:.15;}
+  .tethers.focus path:not(.on){opacity:.06;}
+  @keyframes flow{to{stroke-dashoffset:-12;}}
+  .stage.dragging{cursor:grabbing;}
+  .stage.pointing{cursor:pointer;}
+  #scene{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  /* link verbs: grey pills; links that touch a role are purple */
+  .pill{position:absolute;left:0;top:0;background:var(--grey-pill);color:var(--ink);font-size:11.5px;font-weight:500;
+    padding:3px 10px;border-radius:999px;white-space:nowrap;transition:opacity .25s;will-change:transform;}
+  .pill.purple{background:var(--role2);color:#4b36b0;}
+  /* object labels: a pill coloured by object type */
+  .nlabel{position:absolute;left:0;top:0;pointer-events:auto;border:0;padding:3px 11px;border-radius:999px;
+    font-size:12px;font-weight:500;color:#fff;white-space:nowrap;transition:opacity .25s,box-shadow .2s;will-change:transform;}
+  .nlabel.ty-project{background:var(--project);}
+  .nlabel.ty-role{background:var(--role);}
+  .nlabel.ty-person{background:var(--ink);}
+  .nlabel i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:0;box-shadow:0 0 0 1.5px #fff;}
+  .nlabel:hover,.nlabel.hot{box-shadow:0 0 0 3px rgba(31,35,33,.15);}
+  .ty{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#fff;
+    padding:2px 8px;border-radius:999px;}
+  .ty-project{background:var(--project);} .ty-role{background:var(--role);} .ty-person{background:var(--ink);}
+  /* property panel for the hovered object */
+  .props{position:absolute;left:0;top:0;min-width:230px;max-width:300px;background:var(--panel);border:1px solid var(--ink);
+    border-radius:10px;padding:12px 14px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:3;
+    box-shadow:0 8px 24px rgba(31,35,33,.08);}
+  .props.on{opacity:1;}
+  .props .pt{font-size:12.5px;font-weight:600;letter-spacing:1px;margin-bottom:8px;}
+  .props table{border-collapse:collapse;width:100%;font-size:12.5px;}
+  .props td{padding:5px 0;border-top:1px solid var(--line);vertical-align:top;}
+  .props td:first-child{color:var(--ink2);padding-right:14px;white-space:nowrap;}
+  .props td i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;}
+  .props .pa{display:inline-block;margin-top:10px;background:#3d6b55;color:#fff;font-size:11.5px;padding:3px 10px;border-radius:999px;}
+  .stage-foot{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;padding:6px 32px 18px;max-width:1280px;margin:0 auto;}
+  .hint{font-family:var(--mono);font-size:11px;color:var(--ink3);}
+  /* legend: what the colours mean */
+  .legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:11.5px;color:var(--ink2);}
+  .legend .ty{font-size:9.5px;}
+  .legend span.k{display:inline-flex;align-items:center;gap:5px;}
+  .legend i.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+  .legend i.ln{width:20px;height:0;border-top:1.5px dashed var(--ink);display:inline-block;}
+  .legend i.ln.purple{border-color:var(--role);}
+  .legend .sep{width:1px;height:12px;background:var(--line);}
+
+  /* ontology -> federation row (the site's navigation) */
+  .fed{max-width:1180px;margin:0 auto;padding:0 32px 56px;}
+  .fed-title{text-align:center;font-size:13px;font-weight:500;letter-spacing:1.6px;}
+  .fed-rails{position:relative;height:56px;margin-top:8px;}
+  .fed-rails svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .fed-rails path{fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke;}
+  .fed-rails span{position:absolute;top:8px;font-size:11.5px;color:var(--ink2);}
+  .fed-rails .l{right:calc(50% + 14px);}
+  .fed-rails .r{left:calc(50% + 14px);}
+  .sources{display:grid;grid-template-columns:repeat(4,1fr);}
+  .sources a{display:block;margin:0 10px;border:1px solid var(--ink);background:var(--panel);text-decoration:none;
+    padding:22px 16px;text-align:center;transition:background .2s;}
+  .sources a:hover{background:var(--mint2);}
+  .sources b{display:block;font-size:13.5px;font-weight:500;letter-spacing:1.2px;}
+  .sources small{display:block;font-family:var(--mono);font-size:11px;color:var(--ink2);margin-top:6px;}
+
+  /* object card */
+  .card{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--panel);z-index:10;
+    border-left:1px solid var(--line);padding:72px 32px 32px;overflow-y:auto;
+    transform:translateX(100%);transition:transform .4s cubic-bezier(.2,.7,.2,1);}
+  .card.open{transform:none;box-shadow:-12px 0 40px rgba(31,35,33,.08);}
+  .card .x{position:absolute;top:18px;right:18px;background:none;border:1px solid var(--line);border-radius:999px;
+    width:34px;height:34px;font-size:16px;color:var(--ink2);}
+  .card .cat{font-family:var(--mono);font-size:11px;color:var(--ink2);letter-spacing:.4px;}
+  .card h2{font-weight:600;font-size:28px;line-height:1.15;margin:6px 0 12px;letter-spacing:-.4px;}
+  .card .st{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--ink2);margin-bottom:18px;}
+  .card .st i{width:7px;height:7px;border-radius:50%;}
+  .card p.d{font-size:15px;line-height:1.7;}
+  .card .stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;margin:22px 0;}
+  .card .stats div{background:var(--panel);padding:12px 14px;}
+  .card .stats div:last-child:nth-child(odd){grid-column:span 2;}
+  .card .stats b{display:block;font-weight:600;font-size:19px;}
+  .card .stats span{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.6px;}
+  .card h3{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--ink3);letter-spacing:.8px;margin:22px 0 8px;}
+  .card .links-to{list-style:none;}
+  .card .links-to li{font-size:13.5px;padding:7px 0;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;}
+  .card .links-to li:last-child{border-bottom:1px solid var(--line);}
+  .card .links-to em{font-style:normal;background:var(--grey-pill);color:var(--ink);font-size:11px;padding:1px 8px;border-radius:999px;}
+  .card .links-to em.purple{background:var(--role2);color:#4b36b0;}
+  .card .links-to span{color:var(--ink3);font-size:12px;}
+  .card .org{font-size:14px;color:var(--ink2);margin:-6px 0 10px;}
+  .card .bullets{padding-left:18px;margin-top:6px;}
+  .card .bullets li{font-size:14.5px;line-height:1.65;margin-bottom:10px;}
+  .card .links-to button{background:none;border:0;padding:0;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;}
+  .card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px;}
+  .card .tags span{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink2);}
+  .card .next{font-size:13.5px;line-height:1.6;color:var(--ink2);border-left:2px solid var(--mint);padding-left:12px;margin-top:20px;}
+  .card .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;}
+  .card .actions a{text-decoration:none;font-size:14px;border-radius:999px;padding:9px 18px;border:1px solid var(--ink);}
+  .card .actions a.primary{background:var(--ink);color:var(--bg);}
+  .card .actions a.disabled{opacity:.4;pointer-events:none;border-style:dashed;}
+
+  /* list view: the skim path and the no-WebGL fallback */
+  .list{position:fixed;inset:0;z-index:8;background:rgba(247,247,244,.96);backdrop-filter:blur(8px);overflow-y:auto;
+    padding:96px 24px 60px;opacity:0;pointer-events:none;transition:opacity .3s;}
+  .list.open{opacity:1;pointer-events:auto;}
+  .list-inner{max-width:760px;margin:0 auto;}
+  .list h2{font-weight:600;font-size:26px;margin-bottom:22px;letter-spacing:-.3px;}
+  .list ol{list-style:none;}
+  .list li button{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:baseline;width:100%;text-align:left;
+    background:none;border:0;border-top:1px solid var(--line);padding:18px 4px;}
+  .list li:last-child button{border-bottom:1px solid var(--line);}
+  .list li b{font-weight:600;font-size:17px;display:block;}
+  .list li small{display:block;font-size:13.5px;color:var(--ink2);line-height:1.55;margin-top:3px;}
+  .list li em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink2);white-space:nowrap;}
+  .list li button:hover b{text-decoration:underline;text-decoration-color:var(--mint);text-decoration-thickness:3px;}
+  .list-close{position:fixed;top:24px;right:24px;z-index:9;}
+
+  @media (max-width:980px){ .skills{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:720px){
+    header.top{padding:20px 16px 0;flex-direction:column;}
+    .stage{height:62vh;}
+    .skills{padding:18px 16px 0;gap:12px;}
+    .group .box{min-height:0;padding:10px;}
+    .tethers{display:none;}
+    .nlabel{font-size:10px;}
+    .hint{display:none;}
+    .stage-foot{padding:6px 16px 16px;}
+    .legend{gap:4px 10px;font-size:10.5px;}
+    .fed{padding:0 16px 40px;}
+    .fed-rails{display:none;}
+    .fed-title{margin-bottom:14px;}
+    .sources{grid-template-columns:1fr 1fr;gap:10px;}
+    .sources a{margin:0;}
+    .card{top:auto;height:80vh;width:100%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;
+      transform:translateY(100%);padding:56px 22px 28px;}
+  }
+  @media (prefers-reduced-motion:reduce){ .card,.list,.pill,.nlabel,.skill{transition:none;} .tethers path.on{animation:none;} }
+</style>
+<script>window.SITE_ROOT="";window.SITE_PAGE="home";</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div class="scanbeam" aria-hidden="true"></div>
-
-<div class="title-wrap">
-  <div class="title-ghost" aria-hidden="true">01</div>
-  <div class="title-grid">
-
-    <div class="title-left">
-      <div class="prompt">whoami</div>
-      <h1 class="title-title">SYSTEMS<br><span class="accent" id="typed"></span><span class="cursor">_</span></h1>
-      <p class="tag">I'm Cheng-Yuan, a CS student from Georgia Tech focusing on Backend Systems, Cloud Data, and Data Pipelines</p>
-
-      <div class="title-cta">
-        <a class="btn primary" id="enter-btn" href="system.html">Website &rarr;</a>
-        <a class="btn" id="resume-btn" href="assets/resume.pdf" target="_blank" rel="noopener">resume &darr;</a>
-      </div>
-    </div>
-
-    <div class="ascii-panel">
-      <div class="ascii-top">
-        <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
-        <span class="title">profile.ascii</span>
-      </div>
-      <pre class="ascii" aria-label="ASCII-art portrait">
-                                                                                                                          
-                                                                                                                          
-                                                          .,.                                                             
-                                                     :fuvufTffTtjunzYYnfi,                                                
-                                                   ;jQqqqmLLwbkbbbddbddkhdmvT;.                                           
-                                                 .ILkkppdbbbahhhkddbhahbbdkkdwLYjtI.                                      
-                                             ::IiTJpkkhaMooohdkbbbkbbbbddbqpkhkbkakbCF.                                   
-                                       .:!xXmqqpbkhhkhooaaaaooahkkkkkdpdppdbaahhkkhhhdJI                                  
-                                    .ijYQqdhhbbkhhaoooaaaoaahhahkbdkhkbkkkkhahaaahaahaakc,                                
-                                   tnUwdkaoooooaahhoooMMWWMMMoaoahhhkaoahaoMMMMoaaahhkaahwf.                              
-                                 ;vLmqbaoMMWMMoooohaoMMMMMWWMMWMMMMoohhoMMMMMWMMMaaaoaoooMaqj.                            
-                                tLddkhhooMMMMWWWWMMMaooooMMMMoMMoaaaoMMWWWWWMMohaMMoaoMooooMkX!.                          
-                               FphhaMMMMMMMMMWWWMMoooahahaoooMMMMMMMMMMMMMMMMMMMMMMoaoMMMMMMMopx                          
-                              tdkhaMWWWWMaaMMMoohbqwwwQLLQmqdbbkhahhaoMMMMMMMMMMMoooMMMMMoooMMoQ!                         
-                             ;qahaoMMWMMahhkbpmCYcuxrrnnuuucYCqbkkbbhaoMWWMMMMMMMMMMMMMMMMoaMMoku.                        
-                             uhoahaMMMMakbqwLzxjFfTTTTTTTTfFjnUQLLwdbkaooMMoMMMMMMMoaahooMMMMMMMw.                        
-                            ,JoMMMMMMMohbqmYxjFfTTtttttt!!!ttfFxuuzYLqbhhhhaMMMMoooooMMMMMMMMMMMm.                        
-                            ,JMWMMMMMMhbdwUnjFfTTt!!!!!!!llll!!tTFjnvcXJLmpbhaoahhaaoMMMWMWWMMMoj                         
-                             nkoooMohkbhdCvrFFfTtttt!!!lllllllllll!tTttfjxuUwbhaaoMMMMoMMMWWWWML.                         
-                             ,QoMMoMoakpmXnrFfTTTttt!!llllIIIIllllll!!ttTfjxnzCwdkaooohMMMMWMMMQ                          
-                              ;LMMMMoohdLcxjFfTTtttt!!!!lllllllllll!!!!ttTTFjrxucYmbaaaMMMMMMWMY                          
-                               IpMMMMMhqUnjjFffTtt!!!lllllIlIIIlllllll!!!tTfFjrxnuzCpaoMMMWMMMoX                          
-                               ;wMMMMokwcrjjrrjFft!lIi;;;;;;iiiiiii;iiIl!tTfFrnnnnuzCphMMMWWMoku                          
-                               .voMMoakYxrxvzXzzYCJYzxF!Ii;;;;:;;iIltFxuvczvcXUUXvnucXmhMMMMMob;                          
-                                IwMoMhCuxuULYJCLCUXzYzurf!lIIIIll!tFxcXJJUJLQJYUCCXuuvXpaMMMMon.                          
-                                ,LooobznnccxjfT!IiiI!tTTTTt!ll!!ttTffFFT!lll!TFjnvvunucQhoMMMwI                           
-                                 vaoMbzxxnrFfTt!llIIIl!tttt!l!!ttTfTt!lii;il!tTfFrxxxncCkMMMbt                            
-                                ,xkMokXxrrFFjxvYXpLdzrFtttt!lIl!ttTTTTruQQbmYYurjjjrrncLbaMMpXF.                          
-                               ,jXqaapXxrFfFxvnffJmCTltt!!t!lII!ttt!Tfl!YwwzfrXvrFFFrxcQphobUvn,                          
-                               :FxcCbqUxjftttTTt!ll!tt!l!!!!lIl!tTtll!!!!!!ttTfTtTTfjrcQpdCcuxj.                          
-                               :fFrxYqJnjft!llllllllIIIl!!!lIIl!ttt!IIiIllllllll!!tfFjuCQcrrxjt.                          
-                               .tFFFvmJxFT!llIIIiiiiiiII!!llIIIltTttliiiiiiiiIIl!!tTfjnJcnxjrF:                           
-                                iFTjrXJxFT!llIIiii;ii;il!!!lIIIltTTT!I;;;;;iiIIll!tTfjncjjrrjl                            
-                                .tfjrFxrFTt!lIIIii;;;;Il!t!lIIIl!TfftIi;;;iiiIIll!tTFjnrjjxjF:                            
-                                 ;ffrrjrFTt!llIIii;;;iI!tt!lIiiIltfFfliiiiiiIIll!!TfFrnnxxrrt                             
-                                  ;fjrjjFTt!!lIIiiiiiiI!!!!!I;iIltfTf!iiiiiiIIll!tTFjxrFrxrf                              
-                                   .TFjjjfTt!llIIiiiiiiltTFjt!ttTFFff!iiiIIIIll!tTfFrxrjjjl                               
-                                    .!FFjFfT!!llIIIIIIIll!tttTfTTTTt!lIIiIIIll!!tTFjxrjjT:                                
-                                      ,;lFFTt!!llIIIIll!!!!!lllll!!!!!llIIlll!!tTfFrt:.                                   
-                                         !Fft!!!llll!!tt!!!!lllll!!!!t!!ll!!!ttTTFjF,                                     
-                                         ,fFTtt!!ll!TjrrjFFFFFFFfFjrxnxf!l!tttTffjr;                                      
-                                          ,jFTtt!llll!tTffTTtttttffFFT!l!!!tTTffjri                                       
-                                           .fFTTt!!ll!!!!ttTtTTTfTTTt!ll!!tTTfFjrf.                                       
-                                             lFfTTt!ll!!ll!!!!!!!!!!!!!!ttTffFjrnf.                                       
-                                             ;FjFfTt!!!!!lllllIlll!!!!!!tTfFjrxnnt.                                       
-                                             ;FjjFFfT!!l!!!llllll!!!!!!tTfjrxxxxnt                                        
-                                             ;fFFFFFFT!!lllllll!!!!!!!tfjrxxrxxnut.                                       
-                                             ;fFfTffFFft!llllll!!!!!tTFrxrjjjrrxuf.                                       
-                                             IFFTTTTffFFFfTttttttTfFxnrjjFFFFFjruui                                       
-                                            .IFFfTttTTfffffffFrrrrjFfffffffffFjruj!,                                      
-                                            ;;tjfTtttTTTTtt!lllll!!tTTTTTTTTfFjxrltT,                                     
-                                           ;;;:TFfTtttTTTtttlIlll!ttTTTTttTTfjrjIltft,                                    
-                                          :i;;;,TFTtttttTTttTt!tttttTTTtTTffFr!;Illtf!.                                   
-                                     .,::;ii;;;:,IfTtttttttttttttttttTTttTfFf;;iIIl!TTt:.                                 
-                                 .,,::,,:;ii;;;;:,:Tft!!tt!!!!!!!!!ttTTTTffi,:iiiiI!tttII!li:.                            
-                             .,,::::;;;;iii;;;;::::.:TTttt!!!!!!!!tttTTTfI,,:;iiiiil!!!ii;il!!lI:.                        
-                         .,,:,,::,,;;;i;;ii;;;;:::::..lftttt!!!!ttTTTTT!,,,:;;iiiiiIl!!ii;;;Ill!lllI,                     
-                    .,,:,,,:::::::;;;;i:;;;;;;:::::::,.:ffttttttTTfTTt:.,::;;i;ii;;il!lIIIiiIliiiiIlllI;.                 
-               ..,,,,::;;;;;;;;;;;;;;;;:;;;;;;::;::::::,.IFFTtTTTffTi..,:;;ii;;;;;;illIIIIiiil!IiiiiiiIIIIli:.            
-           .,,,,,:;;;;;;;;;;;;;;;;;;;;;:;;i:::::;:::::::,,:!rjFFFFl:,,::;;;;;;;;;:;I!IIiiIiiiil!Ii;iIlIIiiiIIl!I;.        
-       .,,,,::;;;;;;;ii;;;;i;;;;;;:;;;;:;;;i,,:::::::::;:,,,;!xxt;,,,:;;;;;;;;;;;:i!iiiiiIii;iI!!IiiiiIIllllIi;ill!l:     
-      .,:;;;;;;;;;;;ii;ii;::;;;;;;;::;:::;;;;,,,::::,,:::,,iT;:;,,,,:;;;;;;;;;::;i!iiiiiiiiiiiil!lIi;;ii;iiIll!lI;iIi     
-      ,;;;;;;;;;;;iii;;;;;;;;;;;;;;:;;;;;;;;;:,::::,,,,:::Iliiill:,,,:;;;;;;;;;;ilIiiiiiiiiiii;I!IiIIi;i;iiiiIl!lIIli     
-      ,;;;;;;;;;;iii;;i;;;;;;;;;;;:;::::;;;;;;:::::,,,,,;t!iIIiiil;,,,::;;;;;;;;lIiiiiiiiiiii;;illiiii;;;iiiiiI!liii;     
-      ,;;;;;;;;;iii;;;;;::;;;;;;;;;;;:::;;;;;i;:::::,,:lTfI;:::::;II:,::::;;;:;Ili;;;;;;;ii;;;;;ilIiii;;;iiiiiiI!lIi;     
-      ,;;;;;;;iiii;;;;;;::;;;;;;;;;;;;;;;;;;;i;::::,,;tTlI;:;:,,,:;I!;::::::::i!i;;;;;;;;ii;;;;;iIlIIi;;;iiii;iiIllI;     
-      ,;;;;;;iiii;;;i;;;;;;;;;;;;;;;;;;;;;;;;iI:::,:ITtl;i;::::::::il!i::::::;tI;;;;;;;;;ii;;;;;;illII;;;iiii;;iiiII;     
-
-</pre>
-      <div class="ascii-cap">&gt; profile.ascii &middot; density-mapped render</div>
-    </div>
-
+<header class="top">
+  <div class="who">
+    <h1>Cheng-Yuan Li</h1>
+    <p>Backend systems, cloud data, and pipelines. Below is my work modeled as an ontology: me, the roles I've held, and the projects I've built, tethered to the skills each one uses.</p>
   </div>
-</div>
+  <nav class="nav" aria-label="Site">
+    <a class="chip" href="projects/index.html">Case studies</a>
+    <a class="chip" href="about.html">About</a>
+    <a class="chip" href="contact.html">Contact</a>
+    <a class="chip" href="assets/resume.pdf" target="_blank" rel="noopener">Resume</a>
+    <button class="chip" id="btn-list" aria-pressed="false">List view</button>
+  </nav>
+</header>
 
-<script src="assets/site.js?v=20260807"></script>
+<main>
+  <div class="wrap" id="wrap">
+    <div class="skills" id="skills" aria-label="skills"></div>
+    <div class="stage" id="stage">
+      <canvas id="scene" aria-hidden="true"></canvas>
+      <div class="overlay" id="overlay"></div>
+      <div class="props" id="props" aria-hidden="true"></div>
+    </div>
+    <svg class="tethers" id="tethers" aria-hidden="true">
+      <defs><marker id="arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M1 1 L7 4 L1 7" fill="none" stroke="#949894" stroke-width="1.3" style="stroke-dasharray:none;opacity:1;animation:none"/></marker></defs>
+    </svg>
+  </div>
+  <div class="stage-foot">
+    <div class="legend" aria-label="legend">
+        <span class="ty ty-person">person</span><span class="ty ty-role">role</span><span class="ty ty-project">project</span>
+        <i class="sep"></i>
+        <span class="k"><i class="dot" style="background:var(--done)"></i>shipped</span>
+        <span class="k"><i class="dot" style="background:var(--wip)"></i>in progress</span>
+        <i class="sep"></i>
+        <span class="k"><i class="ln purple"></i>role link</span>
+        <span class="k"><i class="ln"></i>project link</span>
+      </div>
+    <div class="hint">hover an object or a skill · click to open · drag to turn</div>
+  </div>
+
+  <section class="fed" aria-label="read more">
+    <div class="fed-title">ONTOLOGY</div>
+    <div class="fed-rails" aria-hidden="true">
+      <svg viewBox="0 0 1000 56" preserveAspectRatio="none">
+        <path d="M492 0 V24 H125 V56 M492 24 H375 V56 M508 0 V24 H875 V56 M508 24 H625 V56"/>
+      </svg>
+      <span class="l">&larr; the long form</span><span class="r">get in touch &rarr;</span>
+    </div>
+    <nav class="sources">
+      <a href="projects/index.html"><b>CASE STUDIES</b><small id="n-projects">write-ups</small></a>
+      <a href="about.html"><b>ABOUT</b><small>how I think about systems</small></a>
+      <a href="assets/resume.pdf" target="_blank" rel="noopener"><b>RESUME</b><small>pdf</small></a>
+      <a href="contact.html"><b>CONTACT</b><small>say hello</small></a>
+    </nav>
+  </section>
+</main>
+
+<aside class="card" id="card" aria-hidden="true">
+  <button class="x" id="card-x" aria-label="close">&times;</button>
+  <div id="card-body"></div>
+</aside>
+
+<section class="list" id="list" aria-label="all objects">
+  <div class="list-inner">
+    <h2>Roles and projects</h2>
+    <ol id="list-ol"></ol>
+  </div>
+</section>
+
+<script src="assets/site.js?v=20261002-2"></script>
+<script type="module" src="assets/ontology.js?v=20261002-2"></script>
 </body>
 </html>

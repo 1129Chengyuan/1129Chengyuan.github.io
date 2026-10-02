@@ -11,32 +11,36 @@ Pages / Netlify / Vercel.
 
 ## Architecture
 
-Every page (except the `index.html` title card) renders the same shell — header,
-directory-tree sidebar, and a persistent terminal docked at the bottom. That
-chrome is **not** hand-written per page; it is injected by `mountChrome()` in
-`assets/site.js` so it lives in exactly one place. Each HTML page only contains
-its own body content plus a small bootstrap.
+The home page (`index.html`) is a 3D ontology: me, my roles, and my projects as
+line-art objects on a slab (three.js, loaded from a CDN via an import map),
+with typed links between them and lines up to resume-skill panels. Its scene
+and page-specific styles live in `index.html` + `assets/ontology.js`.
 
-**Single source of truth: `assets/site.js`.** Two data structures at the top of
+Every other page gets a light header nav and footer injected by `mountChrome()`
+in `assets/site.js`, so that chrome lives in exactly one place. Each HTML page
+only contains its own body content plus a small bootstrap.
+
+**Single source of truth: `assets/site.js`.** The data structures at the top of
 the file feed nearly everything:
 
 - **`STATS`** — every benchmark number shown anywhere. `STATS.totals` is
-  **computed** at load by `deriveTotals()` from the `PROJECTS` array (project
-  count, done/in-progress split, summed LOC, latest `lastTouched`); never
-  hand-edit `totals`. Values are pulled into the DOM via `data-stat` (static
-  text) and `data-count-stat` (animated counter) attributes by `injectStats()`.
-- **`PROJECTS`** — one array driving the sidebar tree, project grid, topology
-  graph, hover previews, topbar status line, and the terminal's `ls`/`cd`/
-  `status` commands. Adding an entry makes the project appear everywhere at
-  once. Key fields: `id` (matches `cd <id>` and page filename), `file` (page in
-  `projects/`), `status` (`done`|`wip`, drives all colors/badges), `chain`
-  (optional index wiring the node into the animated pipeline; omit and it hangs
-  off the core node), `pos` (topology graph coords), `gh` (repo URL or `null` to
-  grey out "view source"), `lastTouched` (drives status line + hover preview —
-  there is no separate activity structure).
+  **computed** at load by `deriveTotals()` from `PROJECTS` (project count,
+  done/in-progress split); never hand-edit `totals`. Values are pulled into the
+  DOM via `data-stat` attributes by `injectStats()`.
+- **`PROJECTS`** — drives the ontology, the case-study grid
+  (`projects/index.html`), and each case study's roadmap/timeline/source
+  button. Key fields: `id`, `file` (page in `projects/`; a page's `SITE_PAGE`
+  may match either), `status` (`done`|`wip`), `gh` (repo URL or `null` to grey
+  out "view source"; private repos — PredictMarketPipeline, Dataform Slots —
+  must stay `null`), `skills` (names from `SKILLS`), `related` (true links to a
+  project or role, e.g. `[['gfs','Built at']]`), `pos` (fallback slab spot).
+- **`ROLES`** — jobs/positions from the resume (the ontology's purple objects;
+  also the About page's roles list).
+- **`SKILLS`** — resume skills in groups; projects and roles reference them by
+  name in `skills`. Drives the ontology's skill panels and the About page.
 
-The terminal command handler is `runCmd()` in the same file; the prompt path is
-derived from `SITE_PAGE`, so renaming a page updates it automatically.
+`assets/ontology.js` holds presentation only: `LAYOUT` (slab positions),
+`MODEL` (which line-art model draws each object), `ROLE_VERB`.
 
 ## Per-page bootstrap convention
 
@@ -44,7 +48,7 @@ Each HTML page sets two globals before loading the shared script, and this is
 how the shared code knows where it is and how to build relative links:
 
 ```html
-<script>window.SITE_ROOT="";   window.SITE_PAGE="title";</script>   <!-- top-level pages -->
+<script>window.SITE_ROOT="";   window.SITE_PAGE="about";</script>   <!-- top-level pages ("home" for index.html) -->
 <script>window.SITE_ROOT="../"; window.SITE_PAGE="smalldb";</script> <!-- pages in projects/ -->
 ```
 
@@ -60,8 +64,8 @@ stale assets.
 
 ## Notes for edits
 
-- All styling is in `assets/site.css` (single file). All behavior is in
-  `assets/site.js` (single file).
+- Shared styling is in `assets/site.css`; shared behavior and all data in
+  `assets/site.js`. The home page's scene is `assets/ontology.js`.
 - Removing a project means deleting both its `PROJECTS` entry and its
   `projects/*.html` file.
 - See `README.md` for user-facing editing notes (adding a resume link,

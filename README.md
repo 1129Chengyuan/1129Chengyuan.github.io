@@ -6,62 +6,50 @@ browser, or drop the whole folder on GitHub Pages / Netlify / Vercel.
 ## Structure
 
 ```
-index.html            home — hero, topology graph, project grid
-about.html            about.md
-contact.html          contact.sh
-projects/index.html   all projects
-projects/smalldb.html full write-up (overview / architecture / code)
-projects/*.html       placeholder project pages
-assets/site.css       all styling
-assets/site.js        STATS + PROJECTS data, file tree, terminal, topology graph
+index.html            home — the 3D ontology (roles, projects, skills)
+about.html            about, roles, skills
+contact.html          contact
+projects/index.html   case-study grid
+projects/*.html       one case study per project
+assets/site.css       styles for every page except the home scene
+assets/site.js        PROJECTS / ROLES / SKILLS / STATS data + shared helpers
+assets/ontology.js    the home page's three.js scene
 ```
 
-Every page shares the same shell: header, directory tree on the left,
-persistent terminal docked at the bottom.
+Every page except the home page gets the same light header nav and footer,
+injected by `mountChrome()` in `assets/site.js`.
 
 ## Editing
 
-Both data structures live at the top of `assets/site.js`.
+All data lives at the top of `assets/site.js`.
 
-**`STATS`** — every number displayed anywhere on the site. The hero counter, the
-project cards, and the SmallDB stat grid all read from it via `data-stat` and
-`data-count-stat` attributes, so a benchmark rerun means changing one value, not
-hunting through three files.
-
-**`PROJECTS`** — feeds the sidebar tree, the project grid, the topology graph,
-and the terminal's `ls` / `cd` / `status` commands. Fields:
+**`PROJECTS`** — feeds the ontology, the case-study grid, and each case study's
+roadmap and "view source" button. Fields:
 
 | field | meaning |
 |---|---|
-| `id` | used by `cd <id>` and matched to the page filename |
+| `id` | identifier; a page's `SITE_PAGE` matches either this or `file` |
 | `name`, `cat`, `desc` | display copy |
 | `file` | page inside `projects/` |
-| `icon` | single character shown in the ring |
-| `status` | `done` or `wip` — drives every colour and badge |
-| `stats` | two `[label, value]` pairs shown on the card |
-| `pos` | `{x, y}` position in the topology graph |
-| `chain` | optional index — nodes with `chain` are wired into the animated pipeline in order; omit it and the node hangs off the core node instead |
-| `gh` | repo URL, or `null` to grey out the "view source" button |
+| `status` | `done` or `wip` |
+| `stats` | `[label, value]` pairs shown on the card |
+| `skills` | names from `SKILLS` — drawn as lines on the ontology |
+| `related` | true links, e.g. `[['gfs','Built at']]` (to a project or a role) |
+| `gh` | repo URL, or `null` to grey out "view source" (private repos stay `null`) |
+| `pos` | fallback slab position if `assets/ontology.js` has none |
 
-**Terminal commands** are in the `runCmd` function in the same file.
-The prompt path is derived from `SITE_PAGE`, so renaming a page updates it.
+**`ROLES`** — jobs and positions (purple on the ontology, listed on About).
+**`SKILLS`** — the resume's skills, grouped; the About page and the ontology's
+panels render them.
+**`STATS`** — benchmark numbers, pulled in via `data-stat` attributes.
 
-## Adding a resume link
-
-The resume link was removed from the header because the file didn't exist —
-a dead link there is worse than none. To add it back, drop `resume.pdf` into
-`assets/` and put this in the `.right` block of each page's header:
-
-```html
-<a href="assets/resume.pdf">resume</a>       <!-- top-level pages -->
-<a href="../assets/resume.pdf">resume</a>    <!-- pages in projects/ -->
-```
+Where an object sits on the slab and which 3D model draws it are set in
+`LAYOUT` and `MODEL` at the top of `assets/ontology.js`.
 
 ## Before publishing
 
 - Replace the placeholder contact links if you want different social or email values
-- Replace the four placeholder project pages, or delete them from `PROJECTS`
-  (delete the entry and the file together)
+- Removing a project means deleting its `PROJECTS` entry and its page together
 - Verify the SmallDB numbers in `STATS` against a real benchmark run
 - Optional: add `assets/og.png` (1200×630) and an `og:image` meta tag so shared
   links render a preview card
