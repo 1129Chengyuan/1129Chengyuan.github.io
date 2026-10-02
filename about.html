@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>about — Cheng-Yuan Li</title>
-<meta name="description" content="Background, stack, and what I am working on.">
+<meta name="description" content="Background, roles, skills, and how to reach me.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:title" content="about — Cheng-Yuan Li">
@@ -16,7 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=20261002-2">
+<link rel="stylesheet" href="assets/chrome.css?v=20261002-27">
+<link rel="stylesheet" href="assets/site.css?v=20261002-27">
 <script>window.SITE_ROOT="";window.SITE_PAGE="about";</script>
 </head>
 <body>
@@ -27,9 +28,9 @@
 
 <div class="two" style="margin-top:26px;">
   <div>
-    <p class="lede">I like systems that fail loudly and recover quietly. Most of what I build sits below the application layer &mdash; write-ahead logs, memtables, compaction schedulers, consensus.</p>
-    <p class="lede" style="margin-top:16px;">The through-line is durability under pressure: what happens when the process dies mid-write, when the disk fills, when four SSTables pile up and something has to merge them without pulling a gigabyte into RAM. Those are the questions I find genuinely fun.</p>
-    <p class="lede" style="margin-top:16px;">Currently a CS student specializing in data engineering. When I'm not writing C++ or Go, I'm probably reading a paper about compaction strategies I don't need yet.</p>
+    <p class="lede">I'm a junior at Georgia Tech studying Computer Science, and most of what I build works with data because I think it's the most powerful way of modeling the world. If you have a large supply chain with thousands of vendors, the only way you can make an informed conclusion is by aggregating and analyzing that information.</p>
+    <p class="lede" style="margin-top:16px;">To that end, I've worked on data a lot, from cloud computing (Google Cloud, AWS) to building my own database! For now, I'm focused on pulling information from prediction markets and seeing what I can do with them.</p>
+    <p class="lede" style="margin-top:16px;">Let's connect! My contact information is <a href="#contact">below</a>.</p>
 
     <div class="side-label" style="margin-top:30px;">ROLES</div>
     <ul class="about-timeline" id="roles-list"></ul>
@@ -40,24 +41,20 @@
 
     <div class="side-label" style="margin-top:26px;">SKILLS</div>
     <div id="skills-list"></div>
-
-    <div class="side-label" style="margin-top:22px;">CURRENTLY</div>
-    <p style="color:var(--fg2);font-size:14px;line-height:1.7;margin-bottom:22px;">Reworking SmallDB's compaction into leveled tiers to cut write amplification.</p>
-    <div class="side-label">READING</div>
-    <p style="color:var(--fg2);font-size:14px;line-height:1.7;">The LSM-tree paper (O'Neil et al.), the RocksDB tuning guide, and far too many Jepsen reports.</p>
   </div>
 </div>
 
-<div class="side-label" style="margin-top:38px;">BY THE NUMBERS</div>
-<div class="numbers">
-  <div><div class="n">4</div><div class="l">years writing code</div></div>
-  <div><div class="n" data-stat="totals.projects">0</div><div class="l">projects tracked</div></div>
-  <div><div class="n" data-stat="totals.done">0</div><div class="l">shipped / done</div></div>
-  <div><div class="n" data-stat="smalldb.fp">0</div><div class="l">bloom false-pos target</div></div>
+<section id="contact" class="contact-sec">
+<div class="sec-head"><h2>Contact</h2></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;max-width:520px;">
+  <a class="btn primary" href="mailto:chengyuan@gatech.edu">email me</a>
+  <a class="btn" href="https://github.com/1129Chengyuan" target="_blank" rel="noopener">github &#8599;</a>
+  <a class="btn" href="https://www.linkedin.com/in/cheng-yuan-li/" target="_blank" rel="noopener">linkedin &#8599;</a>
 </div>
+</section>
 
 </main>
 
-<script src="assets/site.js?v=20261002-2"></script>
+<script src="assets/site.js?v=20261002-27"></script>
 </body>
 </html>

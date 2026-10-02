@@ -24,13 +24,13 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STATUS_CSS = { done: 'var(--done)', wip: 'var(--wip)' };
 
 const LAYOUT = {
-  astar: [-46, -18], 'gatech-ta': [-14, -28], gfs: [28, -24],
+  astar: [-52, -32], 'gatech-ta': [-20, -44], gfs: [24, -46],
   you: [-6, 2],
-  smalldb: [-38, 22], predictmarket: [-10, 32], portfolio: [20, 27], 'dataform-slots-optimization': [46, 6]
+  smalldb: [-50, 28], predictmarket: [-4, 34], portfolio: [50, 30], 'dataform-slots-optimization': [54, -2]
 };
 const MODEL = {
-  you: 'person', gfs: 'warehouse', 'gatech-ta': 'campus', astar: 'tower',
-  smalldb: 'lsm', predictmarket: 'candles', portfolio: 'monitor', 'dataform-slots-optimization': 'rack'
+  you: 'person', gfs: 'truck', 'gatech-ta': 'techTower', astar: 'tower',
+  smalldb: 'database', predictmarket: 'candles', portfolio: 'monitor', 'dataform-slots-optimization': 'cloud'
 };
 const ROLE_VERB = { gfs: 'Interned at', 'gatech-ta': 'Teaches at', astar: 'Researched at' };
 
@@ -110,6 +110,7 @@ cardBody.addEventListener('click', e => { const b = e.target.closest('[data-go]'
 $('#card-x').addEventListener('click', closeCard);
 function setList(on) { list.classList.toggle('open', on); $('#btn-list').setAttribute('aria-pressed', on ? 'true' : 'false'); }
 $('#btn-list').addEventListener('click', () => setList(!list.classList.contains('open')));
+$('#list-x').addEventListener('click', () => setList(false));
 $('#list-ol').innerHTML = nodes.filter(n => n.type !== 'person').map(n =>
   `<li><button data-id="${esc(n.id)}"><span><b>${esc(n.type === 'role' ? n.r.title + ' · ' + n.r.org : n.name)}</b>` +
   `<small>${esc(n.type === 'role' ? n.r.period + ' · ' + n.r.team : n.p.desc)}</small></span>` +
@@ -193,30 +194,52 @@ function buildScene() {
 
   /* ---------------- models, each returns {g, update} ---------------- */
   const MODELS = {
-    person() {                                  // me
+    person() {                                  // me: a little person, a cone with a head on it
       const g = new THREE.Group();
-      g.add(part(C(1.5, 2.3, 3.4), WHITE, 0, 1.7, 0, { hull: true }));
-      g.add(part(new THREE.SphereGeometry(1.25, 24, 16), WHITE, 0, 4.55, 0, { hull: true, edges: false }));
-      const tie = part(B(0.55, 1.7, 0.2), MINT, 0, 2.2, 1.78); tie.rotation.x = -0.23; g.add(tie);
+      g.add(part(new THREE.ConeGeometry(2, 3.8, 40), WHITE, 0, 1.9, 0, { hull: true }));
+      g.add(part(new THREE.SphereGeometry(1.15, 32, 22), WHITE, 0, 4.45, 0, { hull: true, edges: false }));
       return { g };
     },
-    warehouse() {                               // Gordon Food Service: a distribution centre with loading docks
+    truck() {                                   // Gordon Food Service: a food-distribution truck
       const g = new THREE.Group();
-      g.add(part(B(10, 0.4, 7.4), GREY, 0, 0.2, 0));
-      g.add(part(B(8.6, 3.8, 5.6), WHITE, 0, 2.3, -0.4));
-      g.add(part(prism(8.6, 1.3, 5.6), WHITE, 0, 4.2, -0.4));
-      [-2.6, 0, 2.6].forEach(x => g.add(part(B(1.8, 2.2, 0.12), PURPLE, x, 1.5, 2.45)));
-      g.add(part(B(8.8, 0.35, 1.4), GREY, 0, 0.55, 3.0));
+      g.add(part(B(8.2, 0.45, 2.8), GREY, 0.2, 0.9, 0));
+      g.add(part(B(5.4, 3.3, 3), WHITE, -1.2, 2.8, 0));
+      g.add(part(B(5.42, 0.55, 3.02), PURPLE, -1.2, 2.2, 0, { edges: false }));
+      g.add(part(B(2.3, 2.3, 2.8), WHITE, 3.0, 2.25, 0));
+      g.add(part(B(0.1, 0.95, 2.2), GREY, 4.16, 2.75, 0));
+      [-3, -0.4, 3].forEach(x => [-1.45, 1.45].forEach(z => {
+        const w = part(C(0.68, 0.68, 0.45, 20), GREY, x, 0.68, z, { hull: true }); w.rotation.x = Math.PI / 2; g.add(w);
+      }));
       return { g };
     },
-    campus() {                                  // Georgia Tech: a columned teaching building
+    techTower() {                               // Georgia Tech: Tech Tower on a gear, TECH signs up top
       const g = new THREE.Group();
-      g.add(part(B(9, 0.6, 6), GREY, 0, 0.3, 0));
-      g.add(part(B(8.2, 3.4, 3.4), WHITE, 0, 2.3, -0.9));
-      g.add(part(B(1.4, 2.2, 0.1), PURPLE, 0, 1.7, 0.85));
-      [-3.3, -1.4, 1.4, 3.3].forEach(x => g.add(part(C(0.3, 0.3, 3.4, 14), WHITE, x, 2.3, 2.2, { hull: true })));
-      g.add(part(B(9.4, 0.5, 6.4), WHITE, 0, 4.25, 0));
-      g.add(part(prism(9.4, 1.7, 6.4), WHITE, 0, 4.5, 0));
+      const GOLD = new THREE.MeshLambertMaterial({ color: 0xc9b46f }), NAVY = 0x003057;
+      g.add(part(C(2.9, 2.9, 0.5, 40), GOLD, 0, 0.25, 0, { hull: true }));
+      for (let k = 0; k < 12; k++) {
+        const a = k / 12 * Math.PI * 2, tooth = part(B(0.8, 0.5, 0.6), GOLD, Math.cos(a) * 3.05, 0.25, Math.sin(a) * 3.05);
+        tooth.rotation.y = -a; g.add(tooth);
+      }
+      g.add(part(B(4.6, 2.2, 2.6), WHITE, 0, 1.6, 0));                                 // main hall
+      [-1.75, 1.75].forEach(x => {                                                     // wings with gold caps
+        g.add(part(B(1.3, 3, 2.8), WHITE, x, 2, 0));
+        const cap = part(new THREE.ConeGeometry(1.05, 1, 4), GOLD, x, 4, 0); cap.rotation.y = Math.PI / 4; g.add(cap);
+      });
+      g.add(part(B(2.6, 8.2, 2.6), WHITE, 0, 4.6, 0));                                 // the tower
+      g.add(part(B(2.95, 0.4, 2.95), GOLD, 0, 8.9, 0));
+      const roof = part(new THREE.ConeGeometry(2.1, 1.8, 4), GOLD, 0, 9.95, 0); roof.rotation.y = Math.PI / 4; g.add(roof);
+      // TECH, on all four sides
+      const cv = document.createElement('canvas'); cv.width = 256; cv.height = 72;
+      const c2 = cv.getContext('2d');
+      c2.fillStyle = '#' + NAVY.toString(16).padStart(6, '0'); c2.fillRect(0, 0, 256, 72);
+      c2.fillStyle = '#ffffff'; c2.font = 'bold 58px Georgia, serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle';
+      c2.fillText('TECH', 128, 39);
+      const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+      const sign = new THREE.MeshBasicMaterial({ map: tex });
+      for (let k = 0; k < 4; k++) {
+        const s = part(new THREE.PlaneGeometry(2.45, 0.7), sign, Math.sin(k * Math.PI / 2) * 1.32, 8.1, Math.cos(k * Math.PI / 2) * 1.32);
+        s.rotation.y = k * Math.PI / 2; g.add(s);
+      }
       return { g };
     },
     tower() {                                   // A*STAR: a research tower with a lab wing
@@ -246,22 +269,43 @@ function buildScene() {
       set(0);
       return { g, update: set };
     },
-    lsm() { return buildLSM(); },
-    rack() {                                    // Dataform: a rack whose lit slots shift as queries get routed
+    database() {                                // SmallDB: the database stack, a mint band flushing down its levels
       const g = new THREE.Group();
-      g.add(part(B(4.6, 7.6, 4.2), WHITE, 0, 3.8, 0));
-      const slots = [];
-      for (let i = 0; i < 6; i++) {
-        const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
-        g.add(part(B(3.7, 0.6, 0.16), m, 0, 1.2 + i * 1.05, 2.15)); slots.push(m);
+      const lit = new THREE.Color(0x9fe6c3), off = new THREE.Color(0xffffff), mats = [];
+      for (let i = 0; i < 4; i++) {
+        const m = new THREE.MeshLambertMaterial({ color: 0xffffff }); mats.push(m);
+        g.add(part(C(2.7, 2.7, 1, 40), m, 0, 0.5 + i * 1.22, 0, { hull: true }));
       }
-      g.add(part(B(4.9, 0.3, 4.5), GREY, 0, 7.75, 0));
-      const lit = new THREE.Color(MINT_HEX), off = new THREE.Color(0xffffff);
-      let on = [1, 4], last = 0;
-      return { g, update(t, dt) {
-        if (t - last > 2.4) { last = t; on = [Math.floor(Math.random() * 6), Math.floor(Math.random() * 6)]; }
-        slots.forEach((m, i) => m.color.lerp(on.includes(i) ? lit : off, Math.min(1, dt * 3)));
+      return { g, update(t) {
+        const pos = 3.6 - ((t * 0.9) % 5);                 // from just above the top layer down past the bottom
+        mats.forEach((m, i) => m.color.copy(off).lerp(lit, Math.max(0, 1 - Math.abs(pos - i))));
       } };
+    },
+    cloud() {                                   // Dataform Slots: the Google Cloud logo, extruded
+      // geometry measured off the logo: a big top arch and two lobes, all rings, over a flat base.
+      // units: logo px / 100, origin at the base's centre-bottom
+      const g = new THREE.Group();
+      const logo = new THREE.Group(); g.add(logo);
+      const mat = hex => new THREE.MeshLambertMaterial({ color: hex });
+      const RED = 0xd97a6e, YELLOW = 0xe6c56c, GREEN = 0x72ad88, BLUE = 0x729ddd;   // Google's colours, muted to sit with the palette
+      // a ring sector (degrees, counter-clockwise a0 → a1), extruded; depth staggers which piece is in front
+      const arc = (cx, cy, r0, r1, a0, a1, color, depth) => {
+        const t0 = THREE.MathUtils.degToRad(a0), t1 = THREE.MathUtils.degToRad(a1);
+        const sh = new THREE.Shape();
+        sh.absarc(cx, cy, r1, t0, t1, false);
+        sh.absarc(cx, cy, r0, t1, t0, true);
+        logo.add(part(new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false, curveSegments: 40 }).translate(0, 0, -depth / 2), mat(color)));
+      };
+      const bar = (x0, x1, color, depth) => logo.add(part(B(x1 - x0, 1.63, depth), mat(color), (x0 + x1) / 2, 0.815, 0));
+      const L = [-2.1, 2.68], Rt = [2.08, 2.68], T = [0, 3.9];
+      arc(...T, 2.15, 3.6, 48, 170, RED, 1.3);         // top arch, left end tucked under the yellow lobe
+      arc(...T, 2.15, 3.6, 17.5, 48, BLUE, 1.32);      // top arch, right of the 45° cut
+      arc(...Rt, 1.05, 2.68, -90, 90, BLUE, 1.3);      // right lobe
+      bar(0, 2.08, BLUE, 1.32);                        // base, right half
+      bar(-2.1, 0, GREEN, 1.32);                       // base, left half
+      arc(...L, 1.04, 2.67, 233, 270, GREEN, 1.34);    // left lobe, below the diagonal cut
+      arc(...L, 1.04, 2.67, 37, 233, YELLOW, 1.36);    // left lobe, in front of the red arch
+      return { g };
     },
     monitor() {                                 // This site
       const g = new THREE.Group();
@@ -282,67 +326,18 @@ function buildScene() {
     }
   };
 
-  /* SmallDB: an LSM tree that keeps flushing and compacting */
-  function buildLSM() {
-    const g = new THREE.Group();
-    const W = 7.6, D = 5.2;
-    g.add(part(B(W + 0.6, 0.5, D + 0.6), GREY, 0, 0.25, 0));
-    const tiles = (n, w) => Array.from({ length: n }, () => { const m = part(B(w, 1, D), WHITE); g.add(m); return m; });
-    const L2 = tiles(2, W / 2 - 0.1), L1 = tiles(4, W / 4 - 0.1);
-    const mem = part(B(1, 0.45, D - 0.6), MINT); g.add(mem);
-    const st = { l2: 2.2, l1: 1.1, slabs: [], phase: 'fill', pt: 0 };
-    const MEM_Y = 7.6;      // the memtable hovers above the on-disk levels: it lives in memory
-    const layout = () => {
-      L2.forEach((m, j) => { m.scale.y = st.l2; m.position.set(-W / 4 + j * W / 2, 0.5 + st.l2 / 2, 0); });
-      const b1 = 0.6 + st.l2;
-      L1.forEach((m, j) => { m.scale.y = st.l1; m.position.set(-3 * W / 8 + j * W / 4, b1 + st.l1 / 2, 0); });
-      st.l0 = b1 + st.l1 + 0.15;
-    };
-    layout();
-    mem.position.y = MEM_Y;
-    const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2, lerp = (a, b, t) => a + (b - a) * t;
-    let from = {};
-    return { g, update(t, dt) {
-      st.pt += dt;
-      if (st.phase === 'fill') {
-        const k = Math.min(1, st.pt / 2.6);
-        mem.scale.x = Math.max(0.01, k * (W - 1));
-        if (k >= 1) {
-          const w = 2.6 + Math.random() * 3.2, s = part(B(1, 0.38, D - 0.4), WHITE);
-          s.position.set(0, MEM_Y, 0); s.scale.x = W - 1; g.add(s);
-          s.userData = { w, x: (Math.random() - 0.5) * (W - 1 - w), y: st.l0 + 0.2 + st.slabs.length * 0.42 };
-          st.slabs.push(s); mem.scale.x = 0.01; st.phase = 'flush'; st.pt = 0;
-        }
-      } else if (st.phase === 'flush') {
-        const k = ease(Math.min(1, st.pt / 1.4)), s = st.slabs[st.slabs.length - 1], u = s.userData;
-        s.position.y = lerp(MEM_Y, u.y, k); s.position.x = lerp(0, u.x, k); s.scale.x = lerp(W - 1, u.w, k);
-        if (k >= 1) { st.phase = st.slabs.length >= 4 ? 'compact' : 'fill'; st.pt = 0; from = { l1: st.l1, ys: st.slabs.map(s => s.position.y) }; }
-      } else if (st.phase === 'compact') {
-        const k = ease(Math.min(1, st.pt / 2));
-        st.l1 = lerp(from.l1, from.l1 + 0.3, k); layout();
-        st.slabs.forEach((s, j) => { s.position.y = lerp(from.ys[j], st.l0 - 0.2, k); s.scale.y = Math.max(0.01, 1 - k); });
-        if (k >= 1) {
-          st.slabs.forEach(s => g.remove(s)); st.slabs = [];
-          st.phase = st.l1 > 2 ? 'compact2' : 'fill'; st.pt = 0; from = { l1: st.l1, l2: st.l2 };
-        }
-      } else if (st.phase === 'compact2') {
-        const k = ease(Math.min(1, st.pt / 2));
-        st.l1 = lerp(from.l1, 1.1, k); st.l2 = lerp(from.l2, Math.min(from.l2 + 0.3, 3.4), k); layout();
-        if (k >= 1) { st.phase = 'fill'; st.pt = 0; }
-      }
-    } };
-  }
-
   /* ---------------- place objects on discs ---------------- */
-  const DISC_R = 6.6, SCALE = 1.25;
+  const DISC_R = 8, MAX_SCALE = 1.7, FIT = 0.8;   // every model fills FIT of its platform, never more
   const hitMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
   const hits = [], updaters = [];
   nodes.forEach(n => {
     n.discMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
     scene.add(part(C(DISC_R, DISC_R, 0.35, 56), n.discMat, n.x, 0.175, n.z));
     const m = (MODELS[n.kind] || MODELS.generic)();
+    const foot = new THREE.Box3().setFromObject(m.g);
+    const reach = Math.max(...[foot.min.x, foot.max.x].flatMap(x => [foot.min.z, foot.max.z].map(z => Math.hypot(x, z))));
     m.g.position.set(n.x, 0.35, n.z);
-    m.g.scale.setScalar(SCALE);
+    m.g.scale.setScalar(Math.min(MAX_SCALE, (DISC_R * FIT) / reach));
     m.g.rotation.y = -0.25;
     scene.add(m.g);
     if (m.update) updaters.push(m.update);
@@ -361,7 +356,8 @@ function buildScene() {
       let cost = Math.abs(t - 0.5);
       nodes.forEach(n => {
         const dx = x - n.x, dz = z - n.z;
-        if (Math.abs(dx) < Math.max(8, n.name.length * 0.6) && dz > DISC_R - 3 && dz < DISC_R + 6) cost += 10;
+        const chars = n.type === 'role' ? Math.max(n.r.title.length, n.r.org.length) : n.name.length;
+        if (Math.abs(dx) < Math.max(8, chars * 0.6) && dz > DISC_R - 3 && dz < DISC_R + (n.type === 'role' ? 17 : 6)) cost += 10;   // role labels are two lines tall
         if (Math.abs(dx) < 6 && dz < 0 && dz > -14) cost += 10;
       });
       if (cost < bestCost) { bestCost = cost; best = t; }
@@ -393,7 +389,9 @@ function buildScene() {
   nodes.forEach(n => {
     const el = document.createElement('button');
     el.className = 'nlabel ty-' + n.type;
-    el.innerHTML = (n.p ? `<i style="background:${STATUS_CSS[n.p.status]}"></i>` : '') + esc(n.name);
+    // roles lead with what I did there, the organisation underneath
+    el.innerHTML = n.type === 'role' ? `${esc(n.r.title)}<small>${esc(n.r.org)}</small>`
+      : (n.p ? `<i style="background:${STATUS_CSS[n.p.status]}"></i>` : '') + esc(n.name);
     el.addEventListener('click', () => openCard(n));
     el.addEventListener('mouseenter', () => { labelHover = n.id; });
     el.addEventListener('mouseleave', () => { labelHover = null; });

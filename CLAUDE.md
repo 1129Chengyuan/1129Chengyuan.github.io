@@ -16,8 +16,11 @@ line-art objects on a slab (three.js, loaded from a CDN via an import map),
 with typed links between them and lines up to resume-skill panels. Its scene
 and page-specific styles live in `index.html` + `assets/ontology.js`.
 
-Every other page gets a light header nav and footer injected by `mountChrome()`
-in `assets/site.js`, so that chrome lives in exactly one place. Each HTML page
+Every page, home included, gets the same persistent header nav and footer from
+`mountChrome()` in `assets/site.js` (styles in `assets/chrome.css`, loaded by
+every page), so that chrome lives in exactly one place. Case-study pages also get
+an "All case studies" link and previous/next links. Contact is a section of
+`about.html` (`#contact`), not its own page. Each HTML page
 only contains its own body content plus a small bootstrap.
 
 **Single source of truth: `assets/site.js`.** The data structures at the top of

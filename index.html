@@ -25,10 +25,8 @@
   button{font:inherit;color:inherit;cursor:pointer;}
   :focus-visible{outline:2px solid var(--done);outline-offset:2px;}
 
-  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:28px 32px 0;max-width:1280px;margin:0 auto;}
-  .who h1{font-size:20px;font-weight:600;letter-spacing:-.2px;}
-  .who p{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.5;max-width:520px;}
-  .nav{display:flex;gap:8px;}
+  .intro{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:26px 32px 0;max-width:1280px;margin:0 auto;}
+  .intro p{font-size:15px;color:var(--ink2);line-height:1.6;max-width:600px;}
   .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;text-decoration:none;white-space:nowrap;}
   .chip:hover{border-color:var(--ink);}
   .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);}
@@ -66,7 +64,8 @@
   .nlabel{position:absolute;left:0;top:0;pointer-events:auto;border:0;padding:3px 11px;border-radius:999px;
     font-size:12px;font-weight:500;color:#fff;white-space:nowrap;transition:opacity .25s,box-shadow .2s;will-change:transform;}
   .nlabel.ty-project{background:var(--project);}
-  .nlabel.ty-role{background:var(--role);}
+  .nlabel.ty-role{background:var(--role);border-radius:10px;text-align:center;line-height:1.3;padding:4px 12px 5px;}
+  .nlabel.ty-role small{display:block;font-size:10.5px;font-weight:400;opacity:.85;}
   .nlabel.ty-person{background:var(--ink);}
   .nlabel i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:0;box-shadow:0 0 0 1.5px #fff;}
   .nlabel:hover,.nlabel.hot{box-shadow:0 0 0 3px rgba(31,35,33,.15);}
@@ -89,11 +88,6 @@
   /* legend: what the colours mean */
   .legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:11.5px;color:var(--ink2);}
   .legend .ty{font-size:9.5px;}
-  .legend span.k{display:inline-flex;align-items:center;gap:5px;}
-  .legend i.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
-  .legend i.ln{width:20px;height:0;border-top:1.5px dashed var(--ink);display:inline-block;}
-  .legend i.ln.purple{border-color:var(--role);}
-  .legend .sep{width:1px;height:12px;background:var(--line);}
 
   /* ontology -> federation row (the site's navigation) */
   .fed{max-width:1180px;margin:0 auto;padding:0 32px 56px;}
@@ -104,7 +98,7 @@
   .fed-rails span{position:absolute;top:8px;font-size:11.5px;color:var(--ink2);}
   .fed-rails .l{right:calc(50% + 14px);}
   .fed-rails .r{left:calc(50% + 14px);}
-  .sources{display:grid;grid-template-columns:repeat(4,1fr);}
+  .sources{display:grid;grid-template-columns:repeat(3,1fr);}
   .sources a{display:block;margin:0 10px;border:1px solid var(--ink);background:var(--panel);text-decoration:none;
     padding:22px 16px;text-align:center;transition:background .2s;}
   .sources a:hover{background:var(--mint2);}
@@ -162,11 +156,13 @@
   .list li small{display:block;font-size:13.5px;color:var(--ink2);line-height:1.55;margin-top:3px;}
   .list li em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink2);white-space:nowrap;}
   .list li button:hover b{text-decoration:underline;text-decoration-color:var(--mint);text-decoration-thickness:3px;}
-  .list-close{position:fixed;top:24px;right:24px;z-index:9;}
+  .list-close{position:fixed;top:22px;right:max(32px,calc((100vw - 1280px) / 2 + 32px));width:38px;height:38px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);font-size:20px;line-height:1;color:var(--ink2);display:flex;align-items:center;justify-content:center;}
+  .list-close:hover{color:var(--ink);border-color:var(--ink);}
 
   @media (max-width:980px){ .skills{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:720px){
-    header.top{padding:20px 16px 0;flex-direction:column;}
+    .intro{padding:18px 16px 0;flex-direction:column;}
     .stage{height:62vh;}
     .skills{padding:18px 16px 0;gap:12px;}
     .group .box{min-height:0;padding:10px;}
@@ -185,23 +181,15 @@
   }
   @media (prefers-reduced-motion:reduce){ .card,.list,.pill,.nlabel,.skill{transition:none;} .tethers path.on{animation:none;} }
 </style>
+<link rel="stylesheet" href="assets/chrome.css?v=20261002-27">
 <script>window.SITE_ROOT="";window.SITE_PAGE="home";</script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
-<header class="top">
-  <div class="who">
-    <h1>Cheng-Yuan Li</h1>
-    <p>Backend systems, cloud data, and pipelines. Below is my work modeled as an ontology: me, the roles I've held, and the projects I've built, tethered to the skills each one uses.</p>
-  </div>
-  <nav class="nav" aria-label="Site">
-    <a class="chip" href="projects/index.html">Case studies</a>
-    <a class="chip" href="about.html">About</a>
-    <a class="chip" href="contact.html">Contact</a>
-    <a class="chip" href="assets/resume.pdf" target="_blank" rel="noopener">Resume</a>
-    <button class="chip" id="btn-list" aria-pressed="false">List view</button>
-  </nav>
-</header>
+<section class="intro">
+  <p>Backend systems, cloud data, and pipelines. Below is my work modeled as an ontology: me, the roles I've held, and the projects I've built, tethered to the skills each one uses.</p>
+  <button class="chip" id="btn-list" aria-pressed="false">List view</button>
+</section>
 
 <main>
   <div class="wrap" id="wrap">
@@ -218,14 +206,8 @@
   </div>
   <div class="stage-foot">
     <div class="legend" aria-label="legend">
-        <span class="ty ty-person">person</span><span class="ty ty-role">role</span><span class="ty ty-project">project</span>
-        <i class="sep"></i>
-        <span class="k"><i class="dot" style="background:var(--done)"></i>shipped</span>
-        <span class="k"><i class="dot" style="background:var(--wip)"></i>in progress</span>
-        <i class="sep"></i>
-        <span class="k"><i class="ln purple"></i>role link</span>
-        <span class="k"><i class="ln"></i>project link</span>
-      </div>
+      <span class="ty ty-person">person</span><span class="ty ty-role">role</span><span class="ty ty-project">project</span>
+    </div>
     <div class="hint">hover an object or a skill · click to open · drag to turn</div>
   </div>
 
@@ -233,15 +215,14 @@
     <div class="fed-title">ONTOLOGY</div>
     <div class="fed-rails" aria-hidden="true">
       <svg viewBox="0 0 1000 56" preserveAspectRatio="none">
-        <path d="M492 0 V24 H125 V56 M492 24 H375 V56 M508 0 V24 H875 V56 M508 24 H625 V56"/>
+        <path d="M492 0 V24 H167 V56 M500 0 V56 M508 0 V24 H833 V56"/>
       </svg>
-      <span class="l">&larr; the long form</span><span class="r">get in touch &rarr;</span>
+      <span class="l">&larr; the long form</span><span class="r">the short form &rarr;</span>
     </div>
     <nav class="sources">
       <a href="projects/index.html"><b>CASE STUDIES</b><small id="n-projects">write-ups</small></a>
       <a href="about.html"><b>ABOUT</b><small>how I think about systems</small></a>
       <a href="assets/resume.pdf" target="_blank" rel="noopener"><b>RESUME</b><small>pdf</small></a>
-      <a href="contact.html"><b>CONTACT</b><small>say hello</small></a>
     </nav>
   </section>
 </main>
@@ -252,13 +233,14 @@
 </aside>
 
 <section class="list" id="list" aria-label="all objects">
+  <button class="list-close" id="list-x" aria-label="Close list view">&times;</button>
   <div class="list-inner">
     <h2>Roles and projects</h2>
     <ol id="list-ol"></ol>
   </div>
 </section>
 
-<script src="assets/site.js?v=20261002-2"></script>
-<script type="module" src="assets/ontology.js?v=20261002-2"></script>
+<script src="assets/site.js?v=20261002-27"></script>
+<script type="module" src="assets/ontology.js?v=20261002-27"></script>
 </body>
 </html>

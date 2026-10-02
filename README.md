@@ -7,8 +7,7 @@ browser, or drop the whole folder on GitHub Pages / Netlify / Vercel.
 
 ```
 index.html            home — the 3D ontology (roles, projects, skills)
-about.html            about, roles, skills
-contact.html          contact
+about.html            about, roles, skills, contact (#contact)
 projects/index.html   case-study grid
 projects/*.html       one case study per project
 assets/site.css       styles for every page except the home scene
@@ -16,8 +15,9 @@ assets/site.js        PROJECTS / ROLES / SKILLS / STATS data + shared helpers
 assets/ontology.js    the home page's three.js scene
 ```
 
-Every page except the home page gets the same light header nav and footer,
-injected by `mountChrome()` in `assets/site.js`.
+Every page, home included, gets the same persistent header nav and footer,
+injected by `mountChrome()` in `assets/site.js` and styled by `assets/chrome.css`.
+Case studies also get an "All case studies" link and previous/next links.
 
 ## Editing
 

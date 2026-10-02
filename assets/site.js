@@ -16,10 +16,10 @@ var STATS = {
   /* totals is filled in by deriveTotals() — do not edit by hand */
   totals: {},
   smalldb: {
-    writes:  '5,748/s',
-    latency: '<200µs',
-    bloom:   '174→321/s',
-    speedup: '1.8x',
+    writes:  '52,874/s',
+    latency: '18.91µs',
+    bloom:   '174→15,515/s',
+    speedup: '89x',
     fp:      '1%'
   }
 };
@@ -27,10 +27,10 @@ var STATS = {
 var PROJECTS = [
   { id:'smalldb', name:'SmallDB', file:'smalldb.html', status:'done',
     cat:'storage engine · C++20',
-    desc:'LSM-tree storage engine from scratch: WAL, memtable, sparse-indexed SSTables, bloom filters, background streaming compaction.',
+    desc:'LSM-tree storage engine from scratch: WAL, memtable, sparse-indexed SSTables, bloom filters, a concurrent block cache, background streaming compaction.',
     stats:[['WRITES',STATS.smalldb.writes],['LATENCY',STATS.smalldb.latency]], pos:{x:15,y:-100},
     gh:'https://github.com/1129Chengyuan/smalldb',
-    started:'2025-11',
+    started:'2025-08',
     tags:['C++20','WAL','bloom filter','k-way merge'],
     skills:['C++','LSM-Trees'],
     roadmap:'next: leveled compaction to cut write amplification, then block-level compression' },
@@ -50,7 +50,7 @@ var PROJECTS = [
     cat:'market-data ingestion · async Python',
     desc:'Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer: hand-rolled token-bucket rate limiter, centralized retries with backoff, RSA-PSS signed requests.',
     stats:[['LAYER','Bronze'],['STATUS','building']], pos:{x:-120,y:75}, gh:null,
-    started:'2026-09',
+    started:'2026-08',
     tags:['Python','asyncio','aiohttp','token bucket','medallion'],
     skills:['Python','Async I/O','REST APIs','CI/CD','AWS','Databricks'],
     related:[['smalldb','Evaluated']],
@@ -70,7 +70,7 @@ var PROJECTS = [
 
 /* ROLES: jobs and positions, from the resume. `skills` names entries in SKILLS. */
 var ROLES = [
-  { id:'gfs', title:'Data Engineer Intern', team:'Data Systems', org:'Gordon Food Service',
+  { id:'gfs', title:'Backend Software Engineer Intern', team:'Data Systems', org:'Gordon Food Service',
     period:'May 2026 – Aug 2026', place:'Atlanta, GA',
     bullets:[
       'Engineered an automated serverless data-cost management service using REST APIs and BigQuery slot allocation, securing $50,000+ in annual infrastructure savings.',
@@ -120,41 +120,54 @@ function deriveTotals(){
 }
 
 
-/* ---------------- shared shell: a light header + footer ---------------- */
-/* Injected into every page except the home page (the ontology has its own
-   header), so the nav lives in exactly one place. */
+/* ---------------- shared shell: a persistent header + footer ---------------- */
+/* Injected into every page, home included, so navigation is identical
+   everywhere and lives in exactly one place. Styles: assets/chrome.css. */
 var NAV = [
-  ['index.html', 'Ontology', 'home'],
-  ['projects/index.html', 'Case studies', 'projects'],
-  ['about.html', 'About', 'about'],
-  ['contact.html', 'Contact', 'contact']
+  ['index.html', 'Home', 'home'],
+  ['about.html', 'About', 'about']
 ];
 function currentProject(){
   return PROJECTS.filter(function(p){ return p.id === PAGE || p.file === PAGE + '.html'; })[0];
 }
 function mountChrome(){
-  if(PAGE==='home') return;
-  var inProjects = PAGE==='projects' || !!currentProject();
   var header = document.createElement('header');
-  header.className = 'site-head';
+  header.className = 'site-head' + (PAGE==='home' ? ' wide' : '');   // home's content runs wider
   header.innerHTML =
-    '<a class="brand" href="'+R+'index.html">Cheng-Yuan Li</a>'+
-    '<nav aria-label="Site">'+
-      NAV.map(function(n){
-        var cur = n[2]===PAGE || (n[2]==='projects' && inProjects);
-        return '<a href="'+R+n[0]+'"'+(cur?' class="cur" aria-current="page"':'')+'>'+n[1]+'</a>';
-      }).join('')+
-      '<a class="pill-link" href="'+R+'assets/resume.pdf" target="_blank" rel="noopener">Resume</a>'+
-    '</nav>';
+    '<div class="inner">'+
+      '<a class="brand" href="'+R+'index.html">Cheng-Yuan Li</a>'+
+      '<nav aria-label="Site">'+
+        NAV.map(function(n){
+          var cur = n[2]===PAGE;
+          return '<a href="'+R+n[0]+'"'+(cur?' class="cur" aria-current="page"':'')+'>'+n[1]+'</a>';
+        }).join('')+
+        '<a class="pill-link" href="'+R+'assets/resume.pdf" target="_blank" rel="noopener">Resume</a>'+
+      '</nav>'+
+    '</div>';
   document.body.insertBefore(header, document.body.firstChild);
 
   var foot = document.createElement('footer');
-  foot.className = 'site-foot';
+  foot.className = 'site-foot' + (PAGE==='home' ? ' wide' : '');
   foot.innerHTML = '<span>Cheng-Yuan Li · Georgia Tech</span>'+
     '<span><a href="https://github.com/1129Chengyuan" target="_blank" rel="noopener">GitHub</a> · '+
     '<a href="https://www.linkedin.com/in/cheng-yuan-li/" target="_blank" rel="noopener">LinkedIn</a> · '+
     '<a href="mailto:chengyuan@gatech.edu">Email</a></span>';
   document.body.appendChild(foot);
+
+  // case studies: a way back to the list, and to the neighbouring write-ups
+  var p = currentProject(), main = $('main');
+  if(p && main){
+    var crumb = document.createElement('a');
+    crumb.className = 'crumb'; crumb.href = R+'projects/index.html'; crumb.textContent = '← All case studies';
+    main.insertBefore(crumb, main.firstChild);
+    var i = PROJECTS.indexOf(p), prev = PROJECTS[i-1], next = PROJECTS[i+1];
+    var pager = document.createElement('nav');
+    pager.className = 'pager'; pager.setAttribute('aria-label','More case studies');
+    pager.innerHTML =
+      (prev ? '<a class="prev" href="'+R+'projects/'+prev.file+'"><small>← PREVIOUS</small>'+prev.name+'</a>' : '')+
+      (next ? '<a class="next" href="'+R+'projects/'+next.file+'"><small>NEXT →</small>'+next.name+'</a>' : '');
+    main.appendChild(pager);
+  }
 }
 
 /* ---------------- project grid (projects/index only) ---------------- */
