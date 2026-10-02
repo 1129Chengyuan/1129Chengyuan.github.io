@@ -70,7 +70,7 @@ var PROJECTS = [
 
 /* ROLES: jobs and positions, from the resume. `skills` names entries in SKILLS. */
 var ROLES = [
-  { id:'gfs', title:'Backend Software Engineer Intern', team:'Data Systems', org:'Gordon Food Service',
+  { id:'gfs', title:'Data Engineer Intern', team:'Data Systems', org:'Gordon Food Service',
     period:'May 2026 – Aug 2026', place:'Atlanta, GA',
     bullets:[
       'Engineered an automated serverless data-cost management service using REST APIs and BigQuery slot allocation, securing $50,000+ in annual infrastructure savings.',
