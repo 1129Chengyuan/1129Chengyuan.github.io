@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dataform Slots Optimization — Cheng-Yuan Li</title>
-<meta name="description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
+<title>BigQuery Cost Optimizer — Cheng-Yuan Li</title>
+<meta name="description" content="An automated Google Cloud service that picks the cheaper BigQuery billing mode for each table and opens a pull request to switch it, saving $50K+ a year.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Dataform Slots Optimization — Cheng-Yuan Li">
-<meta property="og:description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
+<meta property="og:title" content="BigQuery Cost Optimizer — Cheng-Yuan Li">
+<meta property="og:description" content="An automated Google Cloud service that picks the cheaper BigQuery billing mode for each table and opens a pull request to switch it, saving $50K+ a year.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Dataform Slots Optimization — Cheng-Yuan Li">
-<meta name="twitter:description" content="Automated BigQuery cost-optimization pipeline that rewrites Dataform .sqlx files to route queries between slot reservations and on-demand compute.">
+<meta name="twitter:title" content="BigQuery Cost Optimizer — Cheng-Yuan Li">
+<meta name="twitter:description" content="An automated Google Cloud service that picks the cheaper BigQuery billing mode for each table and opens a pull request to switch it, saving $50K+ a year.">
 <meta name="theme-color" content="#f7f7f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/chrome.css?v=20261002-28">
-<link rel="stylesheet" href="../assets/site.css?v=20261002-28">
+<link rel="stylesheet" href="../assets/chrome.css?v=20261007-2">
+<link rel="stylesheet" href="../assets/site.css?v=20261007-2">
 <script>window.SITE_ROOT="../";window.SITE_PAGE="dataform-slots";</script>
 <style>
 /* page-local additions — prefixed to avoid collisions with site.css */
@@ -77,16 +77,15 @@
 <div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
   <div class="ico lg" aria-hidden="true">&#9673;</div>
   <div>
-    <h1>Dataform Slots Optimization</h1>
-    <div style="font-size:12px;color:var(--green,#5df29a);">bigquery cost automation &middot; <i class="dot g" style="background:var(--green,#5df29a);"></i> deployed &middot; $50K+/yr saved</div>
+    <h1>BigQuery Cost Optimizer</h1>
+    <div style="font-size:12px;color:var(--green,#5df29a);">cloud cost automation &middot; Python on Google Cloud &middot; built at Gordon Food Service, May &ndash; Aug 2026</div>
   </div>
 </div>
 
-<div id="p-roadmap"></div>
 <div id="p-timeline"></div>
 
 <div class="tabs" role="tablist">
-  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button class="active" role="tab" onclick="tab(this,'ov')">case study</button>
   <button role="tab" onclick="tab(this,'arch')">architecture</button>
   <button role="tab" onclick="tab(this,'code')">code</button>
   <button role="tab" onclick="tab(this,'mod')">modules</button>
@@ -96,51 +95,48 @@
 
 <!-- ============================== OVERVIEW ============================== -->
 <div id="pane-ov" class="pane on dfx">
-  <div class="two">
-    <div>
-      <p class="lede">Every Dataform model in the warehouse bills against BigQuery on-demand pricing by default. Some of them shouldn't. This pipeline reads seven days of job history, works out per-action whether slot reservations or on-demand is cheaper, then goes and edits the source repository itself &mdash; injecting a <code class="inl">pre_operations</code> block with the right <code class="inl">SET @@reservation</code> target and opening a pull request for a human to approve.</p>
-      <div class="tags" style="margin-top:22px;"><span>Python</span><span>BigQuery</span><span>Dataform</span><span>Cloud Run Jobs</span><span>Terraform</span><span>Bitbucket API</span><span>Cloud Scheduler</span></div>
-    </div>
-    <div>
-      <div class="stat4">
-        <div><div class="k">SAVINGS</div><div class="v" style="color:var(--green,#5df29a);">$50K+/yr</div></div>
-        <div><div class="k">STATUS</div><div class="v">deployed</div></div>
-        <div><div class="k">CADENCE</div><div class="v">quarterly</div></div>
-        <div><div class="k">LOOKBACK</div><div class="v">7d</div></div>
-      </div>
-      <a class="btn primary" id="src-link" style="display:block;text-align:center;">view source &#8599;</a>
-    </div>
-  </div>
+  <section class="cs">
+    <h2>Problem</h2>
+    <p>Gordon Food Service runs thousands of scheduled data jobs on Google BigQuery. Each one can be billed in one of two ways: pay per terabyte scanned, or run on a pre-purchased block of compute. Neither is always cheaper, and the right choice differs table by table and drifts as data grows. Reviewing that by hand was slow, so most jobs simply stayed on the default.</p>
+  </section>
 
-  <div class="hero">
-    <div class="n">$50K+</div>
-    <div class="l">BigQuery spend removed per year</div>
-    <div class="s">Confirmed against historical slot and on-demand billing across the Dataform model set. The pipeline holds that number without anyone re-running the analysis by hand &mdash; it re-evaluates every model quarterly and rewrites the routing when the answer changes.</div>
-  </div>
-
-  <h3>The problem</h3>
-  <p>Dataform models run as BigQuery jobs, and by default those jobs land on on-demand pricing &mdash; billed per terabyte scanned. The organisation also owns a dedicated slot reservation, billed per slot-hour. Neither model is universally cheaper. A scan-heavy job that finishes fast is cheap on-demand and expensive on slots; a long-running job that grinds through comparatively little data is the reverse.</p>
-  <p>Historical analysis of <code class="inl">INFORMATION_SCHEMA.JOBS_BY_PROJECT</code> showed the split runs straight through the middle of the model set. Deciding per model by hand, then keeping that decision current as data volumes drift, is not work anyone was going to do repeatedly.</p>
-
-  <h3>The solution</h3>
-  <p>BigQuery exposes routing as a session variable, so the decision can live in the source file. For an action that benefits from the reservation:</p>
-  <pre><code>pre_operations {
-  SET @@reservation = 'projects/project_id/locations/location/reservations/reservation_id';
+  <section class="cs">
+    <h2>Approach</h2>
+    <p>I built an automated, serverless service on Google Cloud that does the whole review on a schedule. It reads BigQuery&rsquo;s job history, works out what each table actually cost under both billing modes, and decides which is cheaper. Then it makes the change itself: it clones the repository that defines each table, edits the table&rsquo;s config to use the cheaper mode, and opens a pull request for an engineer to approve. Nothing merges without a human.</p>
+    <p class="tech"><b>Under the hood:</b> a Python job on Cloud Run, triggered by Cloud Scheduler and provisioned with Terraform. It queries <code class="inl">INFORMATION_SCHEMA</code> job logs for per-action slot-hours and bytes scanned, maps each BigQuery job back to its Dataform source file through workflow execution labels, and injects the routing as a <code class="inl">pre_operations</code> block, then commits and opens the pull request through the Bitbucket REST API:</p>
+    <pre><code>pre_operations {
+  SET @@reservation = 'projects/project_id/locations/location/reservations/reservation_id';  -- or 'none'
 }</code></pre>
-  <p>And for one that should stay on on-demand compute:</p>
-  <pre><code>pre_operations {
-  SET @@reservation = 'none';
-}</code></pre>
-  <p>The pipeline's whole job is to decide which of those two statements belongs in which file, and then to put it there without breaking anything around it.</p>
+  </section>
 
-  <h3>Operating parameters</h3>
-  <div class="kvs">
-    <div><b>Lookback window</b>7 days of job history per run</div>
-    <div><b>Decision rule</b>slots if avg slot cost &le; avg on-demand cost</div>
-    <div><b>Reservation target</b>advanced-analytics</div>
-    <div><b>PR target branch</b>prd</div>
-  </div>
-  <p>The full run path &mdash; cost evaluation through to an open pull request &mdash; is laid out under <b>architecture</b>.</p>
+  <section class="cs">
+    <h2>Results</h2>
+    <div class="results">
+      <div><b>$50K+ / year</b><span>saved on BigQuery spend</span></div>
+      <div><b>Manual &rarr; automated</b><span>a recurring cost review replaced by a scheduled job</span></div>
+      <div><b>Every change reviewed</b><span>the service proposes pull requests and never merges on its own</span></div>
+      <div class="tech"><b>Thousands of runs</b><span>of scheduled jobs evaluated on every pass</span></div>
+    </div>
+    <p class="results-note">Savings confirmed against historical reservation and on-demand billing.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Tech stack</h2>
+    <div class="tags"><span>Python</span><span>BigQuery</span><span>Cloud Run</span><span>Cloud Scheduler</span><span>Terraform</span><span>Dataform</span><span>Bitbucket REST API</span></div>
+  </section>
+
+  <section class="cs">
+    <h2>What I&rsquo;d do next</h2>
+    <div id="p-roadmap"></div>
+  </section>
+
+  <section class="cs">
+    <h2>Links</h2>
+    <div class="links">
+      <a class="btn primary" id="src-link">view source &#8599;</a>
+    </div>
+    <p class="results-note">Company code, so the source isn&rsquo;t public. The other tabs go deeper into how it works.</p>
+  </section>
 </div>
 
 <!-- ============================ ARCHITECTURE ============================ -->
@@ -466,6 +462,6 @@ for i in range(brace_start, len(raw_content)):
 
 </main>
 
-<script src="../assets/site.js?v=20261002-28"></script>
+<script src="../assets/site.js?v=20261007-2"></script>
 </body>
 </html>

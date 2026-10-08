@@ -11,61 +11,85 @@
               ontology slab if assets/ontology.js has no spot for it.
    ROLES    : jobs/positions (the ontology's purple objects).
    SKILLS   : resume skills; projects and roles list theirs in `skills`.
+   EDUCATION: the About page's education block.
    ============================================================ */
 var STATS = {
   /* totals is filled in by deriveTotals() — do not edit by hand */
   totals: {},
   smalldb: {
-    writes:  '52,874/s',
-    latency: '18.91µs',
-    bloom:   '174→15,515/s',
-    speedup: '89x',
-    fp:      '1%'
+    writes:   '52,874/s',
+    latency:  '18.91µs',
+    bloom:    '174→15,515/s',
+    speedup:  '89x',
+    recovery: '<30 ms'
+  },
+  gfs: {
+    savings: '$50K+/yr',
+    scan:    '97.8%'
+  },
+  kalshi: {
+    trades:  '1M+/day',
+    markets: '175K+'
+  },
+  mpc: {
+    sims:  '120→4,000+',
+    scale: '~33x'
   }
 };
 
+/* Order matters: it is the case-study grid order and the prev/next order. */
 var PROJECTS = [
-  { id:'smalldb', name:'SmallDB', file:'smalldb.html', status:'done',
-    cat:'storage engine · C++20',
-    desc:'LSM-tree storage engine from scratch: WAL, memtable, sparse-indexed SSTables, bloom filters, a concurrent block cache, background streaming compaction.',
-    stats:[['WRITES',STATS.smalldb.writes],['LATENCY',STATS.smalldb.latency]], pos:{x:15,y:-100},
-    gh:'https://github.com/1129Chengyuan/smalldb',
-    started:'2025-08',
-    tags:['C++20','WAL','bloom filter','k-way merge'],
-    skills:['C++','LSM-Trees'],
-    roadmap:'next: leveled compaction to cut write amplification, then block-level compression' },
+  /* company work: gh stays null, never link it */
+  { id:'dataform-slots-optimization', name:'BigQuery Cost Optimizer', file:'dataform-slots.html', status:'done',
+    cat:'cloud cost automation · Python on Google Cloud',
+    desc:'An automated Google Cloud service that checks what every scheduled BigQuery job costs, picks the cheaper billing mode for each table, and opens a pull request to switch it. Saves $50K+ a year.',
+    stats:[['SAVINGS',STATS.gfs.savings],['REVIEW','manual → automated']], pos:{x:80,y:85}, gh:null,
+    started:'2026-05',
+    tags:['BigQuery','Cloud Run','Cloud Scheduler','Terraform'],
+    skills:['Python','SQL','GCP','Terraform','REST APIs','Git'],
+    related:[['gfs','Built at']],
+    roadmap:'require slots to beat on-demand by a configurable margin, so a table never flips between billing modes over pennies' },
 
-  { id:'portfolio', name:'This Site', file:'portfolio.html', status:'done',
-    cat:'portfolio · vanilla JS + three.js',
-    desc:'This portfolio itself: a dependency-free, no-build site where one data file drives a 3D ontology of my roles, projects, and skills, plus every case study.',
-    stats:[['PAGES','8'],['STATUS','deployed']], pos:{x:165,y:-10},
-    gh:'https://github.com/1129Chengyuan/1129Chengyuan.github.io',
-    started:'2026-07',
-    tags:['HTML','CSS','JavaScript','GitHub Pages'],
-    skills:['Git','AI Dev Tools'],
-    roadmap:'next: keep every new project entry data-driven instead of hand-wiring another page' },
+  { id:'smalldb', name:'SmallDB', file:'smalldb.html', status:'done',
+    cat:'key-value database · C++',
+    desc:'A key-value database built from scratch in C++, modeled after RocksDB. It stores data durably on disk and recovers from a crash in under 30 ms.',
+    stats:[['WRITES',STATS.smalldb.writes],['READS',STATS.smalldb.speedup+' faster']], pos:{x:15,y:-100},
+    gh:'https://github.com/1129Chengyuan/SmallDB',
+    started:'2025-08',
+    tags:['C++20','LSM-tree','WAL','bloom filter'],
+    skills:['C++','LSM-Trees','Concurrency','Performance Optimization'],
+    roadmap:'benchmark against RocksDB and SQLite on the same workload so the numbers have a baseline, then leveled compaction to cut write amplification' },
 
   /* private repo: gh stays null, never link it */
-  { id:'predictmarket', name:'PredictMarketPipeline', file:'predictmarket.html', status:'wip',
-    cat:'market-data ingestion · async Python',
-    desc:'Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer: hand-rolled token-bucket rate limiter, centralized retries with backoff, RSA-PSS signed requests.',
-    stats:[['LAYER','Bronze'],['STATUS','building']], pos:{x:-120,y:75}, gh:null,
+  { id:'predictmarket', name:'Kalshi Market Pipeline', file:'predictmarket.html', status:'wip',
+    cat:'data pipeline & lakehouse · Python',
+    desc:'A pipeline that captures every trade on Kalshi’s prediction markets (1M+ a day) and builds a cloud lakehouse for checking how well market prices predict real outcomes.',
+    stats:[['TRADES',STATS.kalshi.trades],['MARKETS',STATS.kalshi.markets]], pos:{x:-120,y:75}, gh:null,
     started:'2026-08',
-    tags:['Python','asyncio','aiohttp','token bucket','medallion'],
-    skills:['Python','Async I/O','REST APIs','CI/CD','AWS','Databricks'],
+    tags:['asyncio','AWS S3','Databricks','Airflow'],
+    skills:['Python','Async I/O','REST APIs','ETL Pipelines','AWS','PySpark','Databricks','Airflow','Data Modeling','CI/CD'],
     related:[['smalldb','Evaluated']],
-    roadmap:'next: run the backfills to completion, then a scheduler and the Silver/Gold layer on Databricks' },
+    roadmap:'add data-quality checks and tests to every Airflow task, then build the calibration tables out to every settled market' },
 
-  /* company work: gh stays null, never link it */
-  { id:'dataform-slots-optimization', name:'Dataform Slots Optimization', file:'dataform-slots.html', status:'done',
-    cat:'bigquery cost automation',
-    desc:'Automated Dataform rewrite pipeline that routes queries between slot reservations and on-demand compute.',
-    stats:[['SAVINGS','$50k+/yr'],['STATUS','deployed']], pos:{x:80,y:85}, gh:null,
-    started:'2026-07',
-    tags:['BigQuery','Dataform','Cloud Run'],
-    skills:['GCP','SQL','REST APIs'],
-    related:[['gfs','Built at']],
-    roadmap:'next: keep tuning the rewrite heuristics and reservation routing rules' }
+  { id:'hector-mpc', name:'Bipedal Robot Control on GPU', file:'hector-mpc.html', status:'done',
+    cat:'robotics simulation · C++ → PyTorch',
+    desc:'Moved a bipedal robot’s control software from C++ to PyTorch so it runs in batches on a GPU, scaling from 120 to 4,000+ simultaneous simulations.',
+    stats:[['SIMULATIONS',STATS.mpc.sims],['SCALE',STATS.mpc.scale]], pos:{x:-160,y:60}, gh:null,
+    started:'2024-12',
+    tags:['C++','PyTorch','GPU'],
+    skills:['C++','Python','PyTorch','Performance Optimization'],
+    related:[['lidar','Built at']],
+    roadmap:'profile the batched controller at larger batch sizes to find where GPU scaling stops' },
+
+  { id:'portfolio', name:'This Site', file:'portfolio.html', status:'done',
+    cat:'portfolio · JavaScript + three.js',
+    desc:'An interactive 3D map of my roles, projects, and skills and how they connect, with a short case study for each project. Plain HTML, CSS, and JavaScript, no build step.',
+    stats:[['PAGES','8'],['STATUS','deployed']], pos:{x:165,y:-10},
+    gh:'https://github.com/1129Chengyuan/1129Chengyuan.github.io',
+    started:'2026-04',
+    tags:['HTML','CSS','JavaScript','GitHub Pages'],
+    skills:['JavaScript','Git'],
+    roadmap:'keep every new project entry data-driven instead of hand-wiring another page' }
 ];
 
 /* ROLES: jobs and positions, from the resume. `skills` names entries in SKILLS. */
@@ -73,37 +97,53 @@ var ROLES = [
   { id:'gfs', title:'Data Engineer Intern', team:'Data Systems', org:'Gordon Food Service',
     period:'May 2026 – Aug 2026', place:'Atlanta, GA',
     bullets:[
-      'Engineered an automated serverless data-cost management service using REST APIs and BigQuery slot allocation, securing $50,000+ in annual infrastructure savings.',
-      'Refactored a 7 TB weekly analytical data engine with an incremental merge pipeline using deterministic key hashing, reducing data scan overhead by 97.8% (7 TB to 150 GB).',
-      'Architected an asynchronous log-parsing pipeline processing 3 TB of execution traces across 4,000+ job configurations on Linux environments, eliminating execution latency and pipeline failures.'
+      'Built an automated Google Cloud service that analyzes BigQuery usage and opens pull requests moving each table to its cheaper billing mode, saving $50,000+ per year.',
+      'Migrated a 7 TB weekly full-refresh table to incremental merges, cutting data scanned by 97.8% (7 TB to 150 GB) and eliminating timeouts.',
+      'Built an asynchronous pipeline that processes 3 TB of BigQuery audit logs across 4,000+ jobs, with batch retries and error monitoring.'
     ],
-    skills:['Python','SQL','REST APIs','GCP','Docker','Git','Agile/Scrum','Terraform'] },
+    skills:['Python','SQL','GCP','Terraform','Docker','Git','ETL Pipelines','Agile'] },
 
-  { id:'gatech-ta', title:'Teaching Assistant', team:'Database Systems & Object-Oriented Software', org:'Georgia Tech',
+  { id:'gatech-ta', title:'Teaching Assistant', team:'CS 4400 Database Systems · CS 1331 Intro to OOP', org:'Georgia Tech',
     period:'Jan 2025 – Present', place:'Atlanta, GA',
     bullets:[
-      'CS 4400 (Database Systems): mentor 100+ students on PostgreSQL schema design, B+ tree indexing, ACID transaction isolation, and SQL query optimization for high-concurrency systems.',
-      'CS 1331 (Introduction to OOP): lead labs for 220+ undergraduates, enforcing clean software architecture, object-oriented design patterns, REST API principles, and automated TDD (JUnit).'
+      'CS 4400 (Database Systems): support 450+ students on schema design, SQL, indexing (B+ trees, hash indexes), query optimization, and transaction isolation.',
+      'CS 1331 (Intro to OOP): lead weekly labs for 220+ undergraduates on object-oriented design, code review, and test-driven development with JUnit.'
     ],
-    skills:['SQL','Java','TDD','REST APIs'] },
+    skills:['SQL','Java','TDD','Data Modeling'] },
 
-  { id:'astar', title:'Research Intern', team:'Distributed Data Performance', org:'A*STAR IHPC',
+  { id:'astar', title:'Systems Research Intern', team:'Institute of High Performance Computing', org:'A*STAR',
     period:'May 2025 – Aug 2025', place:'Singapore',
     bullets:[
-      'Built an automated profiling framework to benchmark execution throughput, memory footprints, and compute latency across 40+ large-scale data system architectures.',
-      'Engineered log-processing pipelines to analyze multi-gigabyte device execution traces, pinpointing memory bandwidth constraints and optimizing cache utilization.'
+      'Built a Python benchmarking framework that measures inference throughput, memory use, and latency across 40+ transformer architectures.',
+      'Analyzed multi-gigabyte GPU execution traces to isolate KV-cache memory bottlenecks; presented the findings to senior researchers and supported a research manuscript.'
     ],
-    skills:['Distributed Systems'] }
+    skills:['Python','Performance Optimization'] },
+
+  { id:'lidar', title:'Undergrad Researcher', team:'Laboratory for Intelligent Decision and Autonomous Robots', org:'Georgia Tech LIDAR',
+    period:'Dec 2024 – May 2025', place:'Atlanta, GA',
+    bullets:[
+      'Worked with PhD students on the HECTOR bipedal robot, converting its Model Predictive Control logic from C++ to PyTorch for batched GPU execution.',
+      'Scaled simulations from 120 to 4,000+ simultaneous runs (about 33x).'
+    ],
+    skills:['C++','PyTorch'] }
 ];
 
 /* SKILLS: the resume's skills, grouped as on the resume. Projects and roles
-   point at these by name through their `skills` field. */
+   point at these by name through their `skills` field. Only list what I can
+   discuss in an interview. */
 var SKILLS = [
-  { group:'LANGUAGES', items:['Python','SQL','C++','Java'] },
-  { group:'DATA SYSTEMS', items:['Distributed Systems','LSM-Trees','Async I/O','REST APIs'] },
-  { group:'CLOUD & INFRASTRUCTURE', items:['AWS','GCP','Databricks','Docker','Terraform'] },
-  { group:'TOOLING & PRACTICE', items:['CI/CD','Git','TDD','Agile/Scrum','AI Dev Tools'] }
+  { group:'LANGUAGES', items:['Python','C++','Java','SQL','JavaScript','Bash'] },
+  { group:'BACKEND & DATA', items:['REST APIs','Async I/O','ETL Pipelines','PySpark','Databricks','Airflow','Data Modeling'] },
+  { group:'CLOUD & TOOLING', items:['GCP','AWS','Terraform','Docker','Linux','CI/CD','Git'] },
+  { group:'SYSTEMS & PRACTICE', items:['LSM-Trees','Concurrency','Performance Optimization','PyTorch','TDD','Agile'] }
 ];
+
+/* EDUCATION: the About page's education block. */
+var EDUCATION = {
+  school:'Georgia Institute of Technology', degree:'B.S. Computer Science', period:'Aug 2024 – May 2028 (expected)',
+  gpa:'4.0 / 4.0 · Faculty Honors', threads:'Information Internetworks + Modeling & Simulation',
+  courses:['Data Structures & Algorithms','Design & Analysis of Algorithms','Database Management Systems','Object-Oriented Programming','Machine Learning','Computer Modeling & Simulation','Probability & Statistics','Discrete Mathematics']
+};
 
 var R = window.SITE_ROOT || '';
 var PAGE = window.SITE_PAGE || '';
@@ -198,11 +238,23 @@ function renderSkills(){
   }).join('');
 }
 
+/* ---------------- education (about page) ---------------- */
+function renderEducation(){
+  var el = $('#education'); if(!el) return;
+  var e = EDUCATION;
+  el.innerHTML = '<div class="edu-school">'+e.school+'</div>'+
+    '<div class="edu-line">'+e.degree+' · '+e.period+'</div>'+
+    '<div class="edu-line"><b>GPA</b> '+e.gpa+'</div>'+
+    '<div class="edu-line"><b>Threads</b> '+e.threads+'</div>'+
+    '<div class="tags" style="margin-top:12px;">'+e.courses.map(function(c){ return '<span>'+c+'</span>'; }).join('')+'</div>';
+}
+
 /* ---------------- roles timeline (about page) ---------------- */
 function renderRoles(){
   var el = $('#roles-list'); if(!el) return;
   el.innerHTML = ROLES.map(function(r){
-    return '<li><div class="yr">'+r.period+'</div><div class="ev">'+r.title+'</div><div class="de">'+r.org+' · '+r.team+'</div></li>';
+    return '<li><div class="yr">'+r.period+'</div><div class="ev">'+r.title+'</div><div class="de">'+r.org+' · '+r.team+'</div>'+
+      '<ul class="role-bullets">'+r.bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul></li>';
   }).join('');
 }
 
@@ -250,8 +302,8 @@ function renderProjectMeta(){
   if(rm){
     rm.classList.add('roadmap');
     if(p.status!=='done') rm.classList.add('wip');
-    var label = p.status==='done' ? 'What’s next' : 'Roadmap';
-    rm.innerHTML = '<b>'+label+'</b> <span>'+p.roadmap.replace(/^next:\s*/,'')+'</span>';
+    var next = p.roadmap.replace(/^next:\s*/,'');
+    rm.innerHTML = '<span>'+next.charAt(0).toUpperCase()+next.slice(1)+'.</span>';
   }
   var tl = $('#p-timeline');
   if(tl){
@@ -265,6 +317,6 @@ function renderProjectMeta(){
 document.addEventListener('DOMContentLoaded', function(){
   deriveTotals();
   mountChrome();
-  buildGrid(); renderSkills(); renderRoles();
+  buildGrid(); renderSkills(); renderRoles(); renderEducation();
   injectStats(); markDeadLinks(); renderProjectMeta();
 });

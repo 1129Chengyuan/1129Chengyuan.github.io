@@ -16,6 +16,8 @@
    a spot from its topology `pos` (projects), linked to me.
    ============================================================ */
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const PROJ = window.PROJECTS || [], ROLES = window.ROLES || [], SKILLS = window.SKILLS || [];
 const R = window.SITE_ROOT || '';
@@ -24,15 +26,15 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STATUS_CSS = { done: 'var(--done)', wip: 'var(--wip)' };
 
 const LAYOUT = {
-  astar: [-52, -32], 'gatech-ta': [-20, -44], gfs: [24, -46],
-  you: [-6, 2],
-  smalldb: [-50, 28], predictmarket: [-4, 34], portfolio: [50, 30], 'dataform-slots-optimization': [54, -2]
+  lidar: [-80, -30], 'gatech-ta': [-46, -42], astar: [-12, -46], gfs: [28, -42],
+  you: [-8, 2],
+  'hector-mpc': [-82, 24], smalldb: [-44, 32], predictmarket: [-6, 36], portfolio: [36, 32], 'dataform-slots-optimization': [58, -4]
 };
 const MODEL = {
-  you: 'person', gfs: 'truck', 'gatech-ta': 'techTower', astar: 'tower',
-  smalldb: 'database', predictmarket: 'candles', portfolio: 'monitor', 'dataform-slots-optimization': 'cloud'
+  you: 'person', gfs: 'truck', 'gatech-ta': 'techTower', astar: 'tower', lidar: 'robotArm',
+  smalldb: 'database', predictmarket: 'candles', portfolio: 'monitor', 'dataform-slots-optimization': 'cloud', 'hector-mpc': 'biped'
 };
-const ROLE_VERB = { gfs: 'Interned at', 'gatech-ta': 'Teaches at', astar: 'Researched at' };
+const ROLE_VERB = { gfs: 'Interned at', 'gatech-ta': 'Teaches at', astar: 'Researched at', lidar: 'Researched at' };
 
 /* ---------------- objects ---------------- */
 const nodes = [{ id: 'you', type: 'person', name: 'Cheng-Yuan Li', sub: 'CS · Georgia Tech', skills: [] }]
@@ -194,11 +196,30 @@ function buildScene() {
 
   /* ---------------- models, each returns {g, update} ---------------- */
   const MODELS = {
-    person() {                                  // me: a little person, a cone with a head on it
+    person() {                                  // me: assets/models/person.glb, a cone with a head until it loads
       const g = new THREE.Group();
-      g.add(part(new THREE.ConeGeometry(2, 3.8, 40), WHITE, 0, 1.9, 0, { hull: true }));
-      g.add(part(new THREE.SphereGeometry(1.15, 32, 22), WHITE, 0, 4.45, 0, { hull: true, edges: false }));
-      return { g };
+      const stand = new THREE.Group(); g.add(stand);
+      stand.add(part(new THREE.ConeGeometry(2, 3.8, 40), WHITE, 0, 1.9, 0, { hull: true }));
+      stand.add(part(new THREE.SphereGeometry(1.15, 32, 22), WHITE, 0, 4.45, 0, { hull: true, edges: false }));
+      new GLTFLoader().load(R + 'assets/models/person.glb', gltf => {
+        // one white mesh in the site's line-art style: drop textures/UVs, weld seams so the hull has no cracks,
+        // and bake the scale into the geometry because the hull offset is in model units
+        const src = []; gltf.scene.updateMatrixWorld(true);
+        gltf.scene.traverse(o => { if (o.isMesh) src.push(o.geometry.clone().applyMatrix4(o.matrixWorld)); });
+        if (!src.length) return;
+        let geo = src[0];
+        ['uv', 'normal', 'color'].forEach(a => geo.deleteAttribute(a));
+        geo = mergeVertices(geo, 1e-5);
+        geo.computeBoundingBox();
+        const bb = geo.boundingBox, H = 6;
+        geo.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2).scale(H / (bb.max.y - bb.min.y), H / (bb.max.y - bb.min.y), H / (bb.max.y - bb.min.y));
+        geo.computeVertexNormals();
+        const m = new THREE.Mesh(geo, WHITE);
+        m.add(new THREE.Mesh(geo, hullMat));
+        m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 50), lineMat));
+        g.remove(stand); g.add(m);
+      }, undefined, () => {});                    // load failed: keep the cone
+      return { g, face: true };                   // always turned square to the camera
     },
     truck() {                                   // Gordon Food Service: a food-distribution truck
       const g = new THREE.Group();
@@ -252,7 +273,7 @@ function buildScene() {
       g.add(part(B(3.62, 0.5, 3.62), PURPLE, 2.4, 2.9, 0.6, { edges: false }));
       return { g };
     },
-    candles() {                                 // PredictMarketPipeline: market candlesticks
+    candles() {                                 // Kalshi pipeline: market candlesticks
       const g = new THREE.Group();
       g.add(part(B(10, 0.4, 5), GREY, 0, 0.2, 0));
       const bars = [];
@@ -281,7 +302,7 @@ function buildScene() {
         mats.forEach((m, i) => m.color.copy(off).lerp(lit, Math.max(0, 1 - Math.abs(pos - i))));
       } };
     },
-    cloud() {                                   // Dataform Slots: the Google Cloud logo, extruded
+    cloud() {                                   // BigQuery cost optimizer: the Google Cloud logo, extruded
       // geometry measured off the logo: a big top arch and two lobes, all rings, over a flat base.
       // units: logo px / 100, origin at the base's centre-bottom
       const g = new THREE.Group();
@@ -318,6 +339,35 @@ function buildScene() {
       [-1.1, -1.6].forEach((y, i) => scr.add(part(B(i ? 3.4 : 5.6, 0.22, 0.06), WHITE, i ? -1.1 : 0, y, 0.32, { edges: false })));
       return { g };
     },
+    robotArm() {                                // Georgia Tech robotics lab: a jointed arm on a base
+      const g = new THREE.Group();
+      g.add(part(C(2.6, 3, 0.8, 40), GREY, 0, 0.4, 0, { hull: true }));
+      g.add(part(C(1.1, 1.3, 1.6, 28), WHITE, 0, 1.6, 0, { hull: true }));
+      const lower = part(B(1.1, 5.2, 1.1), WHITE, 0.9, 4.4, 0); lower.rotation.z = -0.35; g.add(lower);
+      g.add(part(new THREE.SphereGeometry(0.85, 24, 16), PURPLE, 1.85, 6.9, 0, { hull: true, edges: false }));
+      const upper = part(B(0.9, 4.2, 0.9), WHITE, 3.5, 7.6, 0); upper.rotation.z = -1.25; g.add(upper);
+      g.add(part(B(0.5, 1.4, 1.3), PURPLE, 5.4, 8.2, 0));
+      return { g };
+    },
+    biped() {                                   // HECTOR: a bipedal robot, legs gently stepping
+      const g = new THREE.Group();
+      g.add(part(B(3.6, 2.4, 2.2), WHITE, 0, 6.6, 0));
+      g.add(part(B(3.62, 0.5, 2.22), MINT, 0, 6.2, 0, { edges: false }));
+      const legs = [-1, 1].map(s => {
+        const hip = new THREE.Group(); hip.position.set(s * 1.1, 5.4, 0); g.add(hip);
+        hip.add(part(B(0.7, 2.6, 0.7), WHITE, 0, -1.3, 0));
+        const knee = new THREE.Group(); knee.position.set(0, -2.6, 0); hip.add(knee);
+        knee.add(part(B(0.6, 2.4, 0.6), WHITE, 0, -1.2, 0));
+        knee.add(part(B(1, 0.35, 1.8), GREY, 0, -2.45, 0.3));
+        return { hip, knee, s };
+      });
+      const set = t => legs.forEach(({ hip, knee, s }) => {
+        const a = Math.sin(t * 1.4 + (s > 0 ? Math.PI : 0)) * 0.22;
+        hip.rotation.x = a; knee.rotation.x = Math.max(0, -a) * 1.2;
+      });
+      set(0);
+      return { g, update: set };
+    },
     generic() {
       const g = new THREE.Group();
       g.add(part(B(4.4, 4.4, 4.4), WHITE, 0, 2.2, 0));
@@ -327,12 +377,13 @@ function buildScene() {
   };
 
   /* ---------------- place objects on discs ---------------- */
-  const DISC_R = 8, MAX_SCALE = 1.7, FIT = 0.8;   // every model fills FIT of its platform, never more
+  const DISC_R = 8, MAX_SCALE = 1.7, FIT = 0.8, PEDESTAL = 4;   // every model fills FIT of its platform, never more; PEDESTAL: how far a selected disc rises
   const hitMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
   const hits = [], updaters = [];
   nodes.forEach(n => {
     n.discMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    scene.add(part(C(DISC_R, DISC_R, 0.35, 56), n.discMat, n.x, 0.175, n.z));
+    n.disc = part(C(DISC_R, DISC_R, 0.35, 56), n.discMat, n.x, 0.175, n.z);
+    scene.add(n.disc);
     const m = (MODELS[n.kind] || MODELS.generic)();
     const foot = new THREE.Box3().setFromObject(m.g);
     const reach = Math.max(...[foot.min.x, foot.max.x].flatMap(x => [foot.min.z, foot.max.z].map(z => Math.hypot(x, z))));
@@ -340,11 +391,13 @@ function buildScene() {
     m.g.scale.setScalar(Math.min(MAX_SCALE, (DISC_R * FIT) / reach));
     m.g.rotation.y = -0.25;
     scene.add(m.g);
+    n.model = m.g; n.face = !!m.face; n.lift = 0; n.spin = 0;
     if (m.update) updaters.push(m.update);
     const hit = new THREE.Mesh(C(DISC_R, DISC_R, 12, 16), hitMat);
     hit.position.set(n.x, 6, n.z); hit.userData.node = n;
     scene.add(hit); hits.push(hit);
     n.top = new THREE.Vector3(n.x, new THREE.Box3().setFromObject(m.g).max.y + 1.2, n.z);   // where tethers leave from
+    n.topY = n.top.y;
   });
 
   /* ---------------- links: dashed, with packets travelling along them ---------------- */
@@ -549,6 +602,18 @@ function buildScene() {
     if (!reduceMotion) time += dt;
     if (!drag) azOff *= 1 - Math.min(1, dt * 3);             // a drag-turn springs back to square
     placeCamera(baseAz + azOff);
+    // the selected object's disc rises into a pedestal and its model turns slowly; both ease back on close
+    nodes.forEach(n => {
+      const on = n.id === selected, ease = Math.min(1, dt * 4);
+      n.lift += ((on ? 1 : 0) - n.lift) * ease;
+      if (on && !reduceMotion) n.spin += dt * 0.7;
+      else if (!on) { n.spin = Math.atan2(Math.sin(n.spin), Math.cos(n.spin)); n.spin -= n.spin * ease; }   // unwind the short way
+      const h = 0.35 + n.lift * PEDESTAL;
+      n.disc.scale.y = h / 0.35; n.disc.position.y = h / 2;
+      n.model.position.y = h;
+      n.model.rotation.y = (n.face ? baseAz + azOff : -0.25) + n.spin;
+      n.top.y = n.topY + n.lift * PEDESTAL;
+    });
     if (!reduceMotion) updaters.forEach(u => u(time, dt));
 
     const skill = skillHover || skillPinned;

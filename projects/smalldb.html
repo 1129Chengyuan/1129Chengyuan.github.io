@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmallDB — LSM-tree storage engine</title>
-<meta name="description" content="An LSM-tree storage engine in C++20: WAL, memtable, sparse-indexed SSTables, bloom filters, streaming compaction.">
+<title>SmallDB — Cheng-Yuan Li</title>
+<meta name="description" content="A key-value database built from scratch in C++, modeled after RocksDB: durable on disk, sub-30 ms crash recovery, 89x faster reads.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SmallDB — LSM-tree storage engine">
-<meta property="og:description" content="An LSM-tree storage engine in C++20: WAL, memtable, sparse-indexed SSTables, bloom filters, streaming compaction.">
+<meta property="og:title" content="SmallDB — Cheng-Yuan Li">
+<meta property="og:description" content="A key-value database built from scratch in C++, modeled after RocksDB: durable on disk, sub-30 ms crash recovery, 89x faster reads.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="SmallDB — LSM-tree storage engine">
-<meta name="twitter:description" content="An LSM-tree storage engine in C++20: WAL, memtable, sparse-indexed SSTables, bloom filters, streaming compaction.">
+<meta name="twitter:title" content="SmallDB — Cheng-Yuan Li">
+<meta name="twitter:description" content="A key-value database built from scratch in C++, modeled after RocksDB: durable on disk, sub-30 ms crash recovery, 89x faster reads.">
 <meta name="theme-color" content="#f7f7f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/chrome.css?v=20261002-28">
-<link rel="stylesheet" href="../assets/site.css?v=20261002-28">
+<link rel="stylesheet" href="../assets/chrome.css?v=20261007-2">
+<link rel="stylesheet" href="../assets/site.css?v=20261007-2">
 <script>window.SITE_ROOT="../";window.SITE_PAGE="smalldb";</script>
 </head>
 <body>
@@ -28,40 +28,79 @@
   <div class="ico lg" aria-hidden="true">&#9707;</div>
   <div>
     <h1>SmallDB</h1>
-    <div style="font-size:12px;color:var(--green);">storage engine &middot; C++20 &middot; <i class="dot g"></i> done</div>
+    <div style="font-size:12px;color:var(--green);">key-value database &middot; C++ &middot; Aug 2025 &ndash; present</div>
   </div>
 </div>
 
-<div id="p-roadmap"></div>
 <div id="p-timeline"></div>
 
 <div class="tabs" role="tablist">
-  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button class="active" role="tab" onclick="tab(this,'ov')">case study</button>
   <button role="tab" onclick="tab(this,'arch')">architecture</button>
   <button role="tab" onclick="tab(this,'code')">code</button>
 </div>
 
 <div id="pane-ov" class="pane on">
-  <div class="two">
+  <section class="cs">
+    <h2>Problem</h2>
+    <p>Databases like RocksDB hide a lot behind a simple put/get interface: how data survives a crash, how writes stay fast, and how reads avoid searching every file on disk. I wanted to understand those trade-offs by building one myself.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Approach</h2>
+    <p>SmallDB is a persistent key-value database built from scratch in C++ and modeled after RocksDB. Every write is recorded in a log on disk before it is acknowledged, recent data is kept in memory, and full batches are written out as sorted, read-only files. A background thread merges those files so reads stay fast and the database never has to pause to clean up.</p>
+    <p class="tech"><b>Under the hood:</b> an LSM-tree with an append-only write-ahead log (WAL), an in-memory memtable, and immutable SSTables, each with a sparse block index and a Bloom filter tuned to a 1% false-positive rate. A fixed-size block cache cuts disk I/O, and compaction is a multithreaded, streaming min-heap merge that never loads a whole table into memory.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Results</h2>
+    <div class="results">
+      <div><b><span data-stat="smalldb.recovery"></span> recovery</b><span>after a crash, by replaying the write-ahead log</span></div>
+      <div><b>No write stalls</b><span>during heavy write bursts, because compaction runs in the background</span></div>
+      <div class="tech"><b><span data-stat="smalldb.speedup"></span> faster reads</b><span>174 &rarr; 15,515 reads/sec from Bloom filters, sparse indexes, and the block cache</span></div>
+      <div class="tech"><b><span data-stat="smalldb.writes"></span> writes</b><span>at <span data-stat="smalldb.latency"></span> latency</span></div>
+    </div>
+    <p class="results-note">Numbers come from SmallDB&rsquo;s own benchmark runs. They don&rsquo;t yet include a side-by-side baseline against RocksDB or SQLite on the same workload.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Tech stack</h2>
+    <div class="tags"><span>C++20</span><span>LSM-tree</span><span>write-ahead log</span><span>SSTables</span><span>Bloom filters</span><span>std::thread</span><span>k-way merge</span></div>
+  </section>
+
+  <section class="cs">
+    <h2>What I&rsquo;d do next</h2>
+    <div id="p-roadmap"></div>
+  </section>
+
+  <section class="cs">
+    <h2>Links</h2>
+    <div class="links">
+      <a class="btn primary" id="src-link" target="_blank" rel="noopener">view source on GitHub &#8599;</a>
+    </div>
+  </section>
+</div>
+
+<div id="pane-arch" class="pane">
+  <div class="two" style="margin-bottom:28px;">
     <div>
-      <p class="lede">An LSM-tree storage engine written from scratch in C++20. Writes hit a write-ahead log before an in-memory red-black tree; full memtables flush to immutable sorted SSTables, each with a sparse index (every 32nd key) and a bloom filter tuned to a 1% false-positive rate. Once four SSTables exist, a condition variable wakes a background thread that runs a streaming k-way merge &mdash; compaction never loads a whole table into RAM.</p>
-      <div class="tags" style="margin:20px 0 24px;"><span>C++20</span><span>WAL</span><span>bloom filter</span><span>sparse index</span><span>k-way merge</span><span>std::thread</span></div>
       <div class="side-label">LEVELS (live)</div>
       <div class="tier">
         <div style="height:24px;background:rgba(93,242,154,.18);border:1px solid var(--green);color:var(--green);"><span>memtable</span><span id="mt-count">0/6</span></div>
         <div style="height:19px;background:rgba(93,242,154,.11);border:1px solid var(--green-dim);color:#3d7a5d;"><span>L0 sstables</span><span id="sst-count">0</span></div>
         <div style="height:15px;background:rgba(93,242,154,.06);border:1px solid #cfe9db;color:#5b605d;font-size:9px;"><span>compacted run</span></div>
       </div>
+      <div class="logpanel">
+        <div class="logtop">
+          <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span style="font-size:11px;color:var(--fg3);">simulated write stream</span>
+          <span class="live">live</span>
+        </div>
+        <div id="loglines" aria-hidden="true"></div>
+      </div>
     </div>
     <div>
-      <div class="stat4">
-        <div><div class="k">SEQ WRITES</div><div class="v" data-stat="smalldb.writes"></div></div>
-        <div><div class="k">WRITE LATENCY</div><div class="v" data-stat="smalldb.latency"></div></div>
-        <div><div class="k">READ THROUGHPUT</div><div class="v" data-stat="smalldb.bloom"></div></div>
-        <div><div class="k">FALSE-POS TARGET</div><div class="v" data-stat="smalldb.fp"></div></div>
-      </div>
-      <a class="btn primary" id="src-link" style="display:block;text-align:center;" target="_blank" rel="noopener">view source &#8599;</a>
-      <div class="side-label" style="margin-top:26px;">FILES</div>
+      <div class="side-label">FILES</div>
       <div style="font-size:12px;color:var(--fg2);line-height:1.9;">
         smalldb.cpp &middot; orchestration, threads<br>
         mem_table.cpp &middot; RB-tree + tombstones<br>
@@ -72,18 +111,6 @@
       </div>
     </div>
   </div>
-
-  <div class="logpanel">
-    <div class="logtop">
-      <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
-      <span style="font-size:11px;color:var(--fg3);">pipeline-stream</span>
-      <span class="live">live</span>
-    </div>
-    <div id="loglines" aria-hidden="true"></div>
-  </div>
-</div>
-
-<div id="pane-arch" class="pane">
   <div class="arch-toggle" role="group" aria-label="Trace path">
     <button class="active" onclick="archPath(this,'write')">&#9998; write path</button>
     <button onclick="archPath(this,'read')">&#8981; read path</button>
@@ -253,6 +280,6 @@ function archPath(btn,which){
 
 </main>
 
-<script src="../assets/site.js?v=20261002-28"></script>
+<script src="../assets/site.js?v=20261007-2"></script>
 </body>
 </html>

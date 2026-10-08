@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bipedal Robot Control on GPU — Cheng-Yuan Li</title>
+<meta name="description" content="Converted a bipedal robot's Model Predictive Control from C++ to PyTorch for batched GPU execution, scaling from 120 to 4,000+ simultaneous simulations.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bipedal Robot Control on GPU — Cheng-Yuan Li">
+<meta property="og:description" content="Converted a bipedal robot's Model Predictive Control from C++ to PyTorch for batched GPU execution, scaling from 120 to 4,000+ simultaneous simulations.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Bipedal Robot Control on GPU — Cheng-Yuan Li">
+<meta name="twitter:description" content="Converted a bipedal robot's Model Predictive Control from C++ to PyTorch for batched GPU execution, scaling from 120 to 4,000+ simultaneous simulations.">
+<meta name="theme-color" content="#f7f7f4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/chrome.css?v=20261007-2">
+<link rel="stylesheet" href="../assets/site.css?v=20261007-2">
+<script>window.SITE_ROOT="../";window.SITE_PAGE="hector-mpc";</script>
+</head>
+<body>
+
+<main>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
+  <div class="ico lg" aria-hidden="true">&#9878;</div>
+  <div>
+    <h1>Bipedal Robot Control on GPU</h1>
+    <div style="font-size:12px;color:var(--green);">robotics simulation &middot; C++ &rarr; PyTorch &middot; Georgia Tech LIDAR, Dec 2024 &ndash; May 2025</div>
+  </div>
+</div>
+
+<div id="p-timeline"></div>
+
+<div id="pane-ov" class="pane on" style="margin-top:28px;">
+  <section class="cs">
+    <h2>Problem</h2>
+    <p>HECTOR is a bipedal robot studied in Georgia Tech&rsquo;s Laboratory for Intelligent Decision and Autonomous Robots. Its controller (Model Predictive Control, which plans the robot&rsquo;s next movements by solving a small optimization problem many times a second) was written in C++ for the CPU, which capped the lab at about 120 simulations running at once.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Approach</h2>
+    <p>Working with PhD students in the lab, I converted the core control logic from C++ to PyTorch so it could run on a GPU. The GPU version advances thousands of simulated robots together in batches.</p>
+    <p class="tech"><b>Under the hood:</b> the robot dynamics and the optimization step were rewritten as batched tensor operations in PyTorch, so each step of the controller is computed for every simulation in parallel on the GPU.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Results</h2>
+    <div class="results">
+      <div><b><span data-stat="mpc.sims"></span></b><span>simultaneous simulations</span></div>
+      <div><b><span data-stat="mpc.scale"></span> more</b><span>scenarios tested at once</span></div>
+    </div>
+  </section>
+
+  <section class="cs">
+    <h2>Tech stack</h2>
+    <div class="tags"><span>C++</span><span>Python</span><span>PyTorch</span><span>GPU parallelization</span><span>Model Predictive Control</span></div>
+  </section>
+
+  <section class="cs">
+    <h2>What I&rsquo;d do next</h2>
+    <div id="p-roadmap"></div>
+  </section>
+
+  <section class="cs">
+    <h2>Links</h2>
+    <div class="links">
+      <a class="btn primary" id="src-link">view source &#8599;</a>
+    </div>
+    <p class="results-note">Lab research code, so the source isn&rsquo;t public.</p>
+  </section>
+</div>
+
+</main>
+
+<script src="../assets/site.js?v=20261007-2"></script>
+</body>
+</html>

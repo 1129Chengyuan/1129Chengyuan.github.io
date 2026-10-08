@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PredictMarketPipeline — Cheng-Yuan Li</title>
-<meta name="description" content="Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer.">
+<title>Kalshi Market Pipeline — Cheng-Yuan Li</title>
+<meta name="description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into an AWS S3 and Databricks lakehouse for market-calibration analysis, with idempotent, loss-free ingestion.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
-<meta property="og:title" content="PredictMarketPipeline — Cheng-Yuan Li">
-<meta property="og:description" content="Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer.">
+<meta property="og:title" content="Kalshi Market Pipeline — Cheng-Yuan Li">
+<meta property="og:description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into an AWS S3 and Databricks lakehouse for market-calibration analysis, with idempotent, loss-free ingestion.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PredictMarketPipeline — Cheng-Yuan Li">
-<meta name="twitter:description" content="Async Python pipeline ingesting Kalshi prediction-market data into a date-partitioned Bronze layer.">
+<meta name="twitter:title" content="Kalshi Market Pipeline — Cheng-Yuan Li">
+<meta name="twitter:description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into an AWS S3 and Databricks lakehouse for market-calibration analysis, with idempotent, loss-free ingestion.">
 <meta name="theme-color" content="#f7f7f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/chrome.css?v=20261002-28">
-<link rel="stylesheet" href="../assets/site.css?v=20261002-28">
+<link rel="stylesheet" href="../assets/chrome.css?v=20261007-2">
+<link rel="stylesheet" href="../assets/site.css?v=20261007-2">
 <script>window.SITE_ROOT="../";window.SITE_PAGE="predictmarket";</script>
 </head>
 <body>
@@ -27,38 +27,59 @@
 <div style="display:flex;align-items:center;gap:15px;margin-bottom:6px;">
   <div class="ico lg wip" aria-hidden="true">&#8677;</div>
   <div>
-    <h1>PredictMarketPipeline</h1>
-    <div style="font-size:12px;color:var(--red);">market-data ingestion &middot; async Python &middot; <i class="dot r"></i> in progress</div>
+    <h1>Kalshi Market Pipeline &amp; Lakehouse</h1>
+    <div style="font-size:12px;color:var(--red);">data pipeline &middot; Python, AWS, Databricks &middot; Aug 2026 &ndash; present</div>
   </div>
 </div>
 
-<div id="p-roadmap"></div>
 <div id="p-timeline"></div>
 
-<div class="wip-banner">Ingestion layer only, so far: the Bronze layer is built and has been run by hand against Kalshi's demo environment. No scheduler, no Silver/Gold, no tests yet. The repository is private.</div>
+<div class="wip-banner">In progress. The source repository is private, so there is no public link; I&rsquo;m happy to walk through the code in an interview.</div>
 
 <div class="tabs" role="tablist">
-  <button class="active" role="tab" onclick="tab(this,'ov')">overview</button>
+  <button class="active" role="tab" onclick="tab(this,'ov')">case study</button>
   <button role="tab" onclick="tab(this,'arch')">architecture</button>
   <button role="tab" onclick="tab(this,'dec')">decisions</button>
 </div>
 
 <div id="pane-ov" class="pane on">
-  <div class="two">
-    <div>
-      <p class="lede">An async Python pipeline that ingests prediction-market data from Kalshi's API into a raw Bronze layer: markets, trades, order books, and historical candlesticks. It is a learning project for async Python and data-engineering fundamentals, and the foundation for a personal trading strategy. Every request goes through one client method that owns rate limiting, RSA-PSS signing, and retry policy; every record lands in newline-delimited JSON, partitioned by the day it was received.</p>
-      <div class="tags" style="margin-top:22px;"><span>Python</span><span>asyncio</span><span>aiohttp</span><span>token bucket</span><span>medallion</span></div>
+  <section class="cs">
+    <h2>Problem</h2>
+    <p>Prediction-market prices are supposed to be probabilities: an event trading at 70&cent; should happen about 70% of the time. Checking that (market calibration) needs a complete, clean record of every market and every trade. Kalshi only serves that data through a rate-limited API, and a pipeline that drops or double-counts trades would quietly skew the answer.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Approach</h2>
+    <p>An asynchronous Python service polls Kalshi&rsquo;s API around the clock. To keep up with 175K+ active markets within a 20-requests-per-second limit, it tracks each market&rsquo;s status and skips the ones that haven&rsquo;t changed. Raw data lands in daily files, is copied to AWS S3 every day, and Spark jobs on Databricks, scheduled by Airflow, deduplicate the trades and build the tables used for calibration analysis.</p>
+    <p class="tech"><b>Under the hood:</b> <code>asyncio</code> + <code>aiohttp</code> with client-side RSA-PSS request signing and an in-memory token-bucket rate limiter with jittered backoff. Ingestion is idempotent and loss-free: records land in Hive-style, date-partitioned JSONL with atomic checkpoint markers, and out-of-order settlement transitions are handled explicitly. PySpark jobs move data from Bronze to Silver Delta Lake tables, and the calibration tables are modeled as a star schema.</p>
+  </section>
+
+  <section class="cs">
+    <h2>Results</h2>
+    <div class="results">
+      <div><b><span data-stat="kalshi.trades"></span> trades</b><span>captured every day</span></div>
+      <div><b><span data-stat="kalshi.markets"></span> markets</b><span>tracked, within a 20 requests/sec limit</span></div>
+      <div><b>Zero data loss</b><span>verified by killing the process mid-stream and checking nothing was lost or duplicated</span></div>
+      <div><b>Daily lakehouse</b><span>raw files replicated to S3, deduplicated and modeled on Databricks</span></div>
     </div>
-    <div>
-      <div class="stat4">
-        <div><div class="k">LAYER</div><div class="v">Bronze</div></div>
-        <div><div class="k">RETRIES</div><div class="v">&le; 3</div></div>
-        <div><div class="k">RESUME MODES</div><div class="v">3</div></div>
-        <div><div class="k">STATUS</div><div class="v">building</div></div>
-      </div>
-      <a class="btn primary" id="src-link" style="display:block;text-align:center;">view source &#8599;</a>
+  </section>
+
+  <section class="cs">
+    <h2>Tech stack</h2>
+    <div class="tags"><span>Python</span><span>asyncio</span><span>aiohttp</span><span>AWS S3</span><span>PySpark</span><span>Databricks</span><span>Delta Lake</span><span>Airflow</span><span>star schema</span></div>
+  </section>
+
+  <section class="cs">
+    <h2>What I&rsquo;d do next</h2>
+    <div id="p-roadmap"></div>
+  </section>
+
+  <section class="cs">
+    <h2>Links</h2>
+    <div class="links">
+      <a class="btn primary" id="src-link">view source &#8599;</a>
     </div>
-  </div>
+  </section>
 </div>
 
 <div id="pane-arch" class="pane">
@@ -103,10 +124,10 @@
       <rect x="290" y="316" width="180" height="44" rx="8" fill="#f7f7f4" stroke="#c9cbc7"/>
       <text x="380" y="335" text-anchor="middle" fill="#5b605d" font-size="11">data/state/</text>
       <text x="380" y="351" text-anchor="middle" fill="#7a7f7b" font-size="10">checkpoints &middot; _SUCCESS</text>
-      <rect x="20" y="300" width="230" height="76" rx="8" fill="none" stroke="#c9cbc7" stroke-dasharray="4 4"/>
-      <text x="135" y="326" text-anchor="middle" fill="#7a7f7b" font-size="11">Silver / Gold</text>
-      <text x="135" y="344" text-anchor="middle" fill="#7a7f7b" font-size="10">Databricks &middot; Delta Lake</text>
-      <text x="135" y="360" text-anchor="middle" fill="#7a7f7b" font-size="10">not built yet</text>
+      <rect x="20" y="300" width="230" height="76" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="135" y="326" text-anchor="middle" fill="#2f9e6e" font-size="11">S3 &rarr; Databricks</text>
+      <text x="135" y="344" text-anchor="middle" fill="#7a7f7b" font-size="10">Bronze &rarr; Silver &middot; Delta Lake</text>
+      <text x="135" y="360" text-anchor="middle" fill="#7a7f7b" font-size="10">daily &middot; Airflow</text>
       </g>
     </svg>
   </div>
@@ -128,6 +149,6 @@
 
 </main>
 
-<script src="../assets/site.js?v=20261002-28"></script>
+<script src="../assets/site.js?v=20261007-2"></script>
 </body>
 </html>
