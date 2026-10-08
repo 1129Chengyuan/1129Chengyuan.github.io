@@ -520,7 +520,7 @@ function buildScene() {
   new ResizeObserver(fit).observe(wrap);
   if (document.fonts) document.fonts.ready.then(measure);
 
-  /* ---------------- pointer: hover traces, click opens, drag turns ---------------- */
+  /* ---------------- pointer: hover traces, click opens, drag turns the slab ---------------- */
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   let hover = null, drag = null;
   function pick(e) {
@@ -530,12 +530,34 @@ function buildScene() {
     const h = ray.intersectObjects(hits, false)[0];
     return h ? h.object.userData.node : null;
   }
-  stage.addEventListener('pointerdown', e => { if (e.target.closest('.nlabel')) return; drag = { x: e.clientX, az: azOff, moved: false }; });
+  // a drag grabs the slab: the point under the pointer stays under it as the slab turns about its centre
+  const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), RMIN = SW / 4, TURN = 0.6;
+  function onFloor(e, cam) {
+    const r = stage.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, cam);
+    return ray.ray.intersectPlane(floor, new THREE.Vector3());
+  }
+  const soft = a => Math.abs(a) <= TURN ? a : Math.sign(a) * (TURN + (Math.abs(a) - TURN) * 0.25);   // rubber-band past the limit
+  stage.addEventListener('pointerdown', e => {
+    if (e.target.closest('.nlabel')) return;
+    const cam = camera.clone(), p = onFloor(e, cam);
+    let r0 = null;
+    if (p) { r0 = p.clone().sub(target); r0.setLength(Math.max(r0.length(), RMIN)); }   // near the centre, grab as if at RMIN
+    drag = { x: e.clientX, y: e.clientY, az: azOff, cam, p0: p, r0, moved: false };
+  });
   addEventListener('pointermove', e => {
     if (drag) {
-      const dx = e.clientX - drag.x;
-      if (Math.abs(dx) > 4) { drag.moved = true; stage.classList.add('dragging'); }
-      if (drag.moved) azOff = Math.max(-0.6, Math.min(0.6, drag.az + dx * 0.005));
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 4) { drag.moved = true; stage.classList.add('dragging'); }
+      if (!drag.moved) return;
+      const p = drag.r0 && onFloor(e, drag.cam);
+      let turn;
+      if (p) {
+        const r1 = p.sub(drag.p0).add(drag.r0);
+        turn = Math.atan2(r1.x, r1.z) - Math.atan2(drag.r0.x, drag.r0.z);
+        turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+      } else turn = (e.clientX - drag.x) * 0.005;           // grabbed above the horizon: plain horizontal turn
+      azOff = soft(drag.az - turn);
     } else if (e.target === $('#scene')) {
       hover = pick(e);
       stage.classList.toggle('pointing', !!hover);
@@ -545,6 +567,7 @@ function buildScene() {
     if (drag && !drag.moved && e.target === $('#scene')) { const n = pick(e); if (n) openCard(n); }
     drag = null; stage.classList.remove('dragging');
   });
+  addEventListener('pointercancel', () => { drag = null; stage.classList.remove('dragging'); });   // e.g. touch handed to page scroll
 
   /* ---------------- property panel: the hovered object's properties ---------------- */
   function propsHTML(n) {
