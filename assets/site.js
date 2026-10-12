@@ -191,7 +191,7 @@ function mountChrome(){
   foot.innerHTML = '<span>Cheng-Yuan Li · Georgia Tech</span>'+
     '<span><a href="https://github.com/1129Chengyuan" target="_blank" rel="noopener">GitHub</a> · '+
     '<a href="https://www.linkedin.com/in/cheng-yuan-li/" target="_blank" rel="noopener">LinkedIn</a> · '+
-    '<a href="mailto:chengyuan@gatech.edu">Email</a></span>';
+    '<a href="mailto:cli895@gatech.edu">Email</a></span>';
   document.body.appendChild(foot);
 
   // case studies: a way back to the list, and to the neighbouring write-ups
