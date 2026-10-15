@@ -63,13 +63,13 @@ var PROJECTS = [
   /* private repo: gh stays null, never link it */
   { id:'predictmarket', name:'Kalshi Market Pipeline', file:'predictmarket.html', status:'wip',
     cat:'data pipeline & lakehouse · Python',
-    desc:'A pipeline that captures every trade on Kalshi’s prediction markets (1M+ a day) and builds a cloud lakehouse for checking how well market prices predict real outcomes.',
+    desc:'A pipeline that captures every trade on Kalshi’s prediction markets (1M+ a day) into immutable local files and an incremental Databricks lakehouse, for checking how well market prices predict real outcomes.',
     stats:[['TRADES',STATS.kalshi.trades],['MARKETS',STATS.kalshi.markets]], pos:{x:-120,y:75}, gh:null,
     started:'2026-08',
-    tags:['asyncio','AWS S3','Databricks','Airflow'],
-    skills:['Python','Async I/O','REST APIs','ETL Pipelines','AWS','PySpark','Databricks','Airflow','Data Modeling','CI/CD'],
+    tags:['asyncio','Databricks','Delta Lake','launchd'],
+    skills:['Python','Async I/O','REST APIs','ETL Pipelines','Databricks','Data Modeling'],
     related:[['smalldb','Evaluated']],
-    roadmap:'add data-quality checks and tests to every Airflow task, then build the calibration tables out to every settled market' },
+    roadmap:'build the redesign one phase at a time, each tested before the next: shared paths and job locks, then the rate-limited client, immutable Bronze parts, resumable jobs, incremental Silver, and finally point-in-time calibration tables' },
 
   { id:'hector-mpc', name:'Bipedal Robot Control on GPU', file:'hector-mpc.html', status:'done',
     cat:'robotics simulation · C++ → PyTorch',

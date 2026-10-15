@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kalshi Market Pipeline — Cheng-Yuan Li</title>
-<meta name="description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into an AWS S3 and Databricks lakehouse for market-calibration analysis, with idempotent, loss-free ingestion.">
+<meta name="description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into immutable local Bronze files and an incremental Databricks lakehouse for point-in-time market-calibration analysis.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2321'/%3E%3Cellipse cx='16' cy='18' rx='9' ry='4.5' fill='%23a5ebc8'/%3E%3Crect x='12' y='8' width='8' height='9' rx='1.5' fill='%23ffffff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Kalshi Market Pipeline — Cheng-Yuan Li">
-<meta property="og:description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into an AWS S3 and Databricks lakehouse for market-calibration analysis, with idempotent, loss-free ingestion.">
+<meta property="og:description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into immutable local Bronze files and an incremental Databricks lakehouse for point-in-time market-calibration analysis.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kalshi Market Pipeline — Cheng-Yuan Li">
-<meta name="twitter:description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into an AWS S3 and Databricks lakehouse for market-calibration analysis, with idempotent, loss-free ingestion.">
+<meta name="twitter:description" content="An async Python pipeline capturing 1M+ Kalshi trades a day into immutable local Bronze files and an incremental Databricks lakehouse for point-in-time market-calibration analysis.">
 <meta name="theme-color" content="#f7f7f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,7 @@
   <div class="ico lg wip" aria-hidden="true">&#8677;</div>
   <div>
     <h1>Kalshi Market Pipeline &amp; Lakehouse</h1>
-    <div style="font-size:12px;color:var(--red);">data pipeline &middot; Python, AWS, Databricks &middot; Aug 2026 &ndash; present</div>
+    <div style="font-size:12px;color:var(--red);">data pipeline &middot; Python, Databricks &middot; Aug 2026 &ndash; present</div>
   </div>
 </div>
 
@@ -50,23 +50,23 @@
 
   <section class="cs">
     <h2>Approach</h2>
-    <p>An asynchronous Python service polls Kalshi&rsquo;s API around the clock. To keep up with 175K+ active markets within a 20-requests-per-second limit, it tracks each market&rsquo;s status and skips the ones that haven&rsquo;t changed. Raw data lands in daily files, is copied to AWS S3 every day, and Spark jobs on Databricks, scheduled by Airflow, deduplicate the trades and build the tables used for calibration analysis.</p>
-    <p class="tech"><b>Under the hood:</b> <code>asyncio</code> + <code>aiohttp</code> with client-side RSA-PSS request signing and an in-memory token-bucket rate limiter with jittered backoff. Ingestion is idempotent and loss-free: records land in Hive-style, date-partitioned JSONL with atomic checkpoint markers, and out-of-order settlement transitions are handled explicitly. PySpark jobs move data from Bronze to Silver Delta Lake tables, and the calibration tables are modeled as a star schema.</p>
+    <p>Ingestion runs on my laptop, on a launchd schedule, so Kalshi credentials never leave it; the cloud only ever gets data. Hourly jobs pull trades and markets through an async client that shares Kalshi&rsquo;s read and write rate limits across every running job. Each job writes immutable, compressed &ldquo;part&rdquo; files, and a sync step uploads each finished part to Databricks exactly once. There, <code>COPY INTO</code> loads each file once into raw Delta tables, incremental <code>MERGE</code>s build deduplicated Silver tables plus a quarantine for bad rows, and Gold tables measure calibration at fixed horizons before each market closes.</p>
+    <p class="tech"><b>Under the hood:</b> <code>asyncio</code> + <code>aiohttp</code> with RSA-PSS request signing, a file-locked token bucket per account (read and write) shared across processes, and full-jitter retries with a typed error hierarchy. Every job starts through one bootstrap that validates settings and takes a job lock, with exit codes as the contract to the scheduler. Bronze parts are gzip JSONL, fsynced and atomically renamed before any checkpoint moves, so a crash can cause duplicates but never gaps. Silver advances a per-entity watermark only after every idempotent step succeeds, so a retried batch changes nothing.</p>
   </section>
 
   <section class="cs">
     <h2>Results</h2>
     <div class="results">
       <div><b><span data-stat="kalshi.trades"></span> trades</b><span>captured every day</span></div>
-      <div><b><span data-stat="kalshi.markets"></span> markets</b><span>tracked, within a 20 requests/sec limit</span></div>
-      <div><b>Zero data loss</b><span>verified by killing the process mid-stream and checking nothing was lost or duplicated</span></div>
-      <div><b>Daily lakehouse</b><span>raw files replicated to S3, deduplicated and modeled on Databricks</span></div>
+      <div><b><span data-stat="kalshi.markets"></span> markets</b><span>tracked within Kalshi&rsquo;s rate limits</span></div>
+      <div><b>Duplicates, never gaps</b><span>data is durable before progress is recorded; every recovery path may re-fetch, none may skip</span></div>
+      <div><b>Incremental lakehouse</b><span>each immutable file is loaded once and merged into Silver, with no full rebuilds</span></div>
     </div>
   </section>
 
   <section class="cs">
     <h2>Tech stack</h2>
-    <div class="tags"><span>Python</span><span>asyncio</span><span>aiohttp</span><span>AWS S3</span><span>PySpark</span><span>Databricks</span><span>Delta Lake</span><span>Airflow</span><span>star schema</span></div>
+    <div class="tags"><span>Python</span><span>asyncio</span><span>aiohttp</span><span>launchd</span><span>Databricks</span><span>Delta Lake</span><span>COPY INTO</span><span>MERGE</span><span>pytest</span></div>
   </section>
 
   <section class="cs">
@@ -84,50 +84,75 @@
 
 <div id="pane-arch" class="pane">
   <div class="archbox">
-    <svg width="100%" viewBox="0 0 860 400" style="min-width:760px;" role="img" aria-label="Request path from backfill scripts through the client's rate limiter, signing, and retry loop into the Bronze writer">
+    <svg width="100%" viewBox="0 0 860 470" style="min-width:760px;" role="img" aria-label="Local jobs run through a bootstrap, a rate-limited Kalshi client, and a Bronze writer that seals immutable part files; sync uploads them to a Databricks volume, where COPY INTO, MERGE, and Gold tables build calibration results">
       <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#2f9e6e" stroke-width="1.6" stroke-linecap="round"/></marker></defs>
       <g font-family="JetBrains Mono, monospace">
-      <rect x="20" y="30" width="170" height="70" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
-      <text x="105" y="56" text-anchor="middle" fill="#1f2321" font-size="12">backfill_*.py</text>
-      <text x="105" y="74" text-anchor="middle" fill="#7a7f7b" font-size="10">one script per entity</text>
-      <text x="105" y="89" text-anchor="middle" fill="#7a7f7b" font-size="10">markets &middot; trades &middot; books</text>
-      <line x1="190" y1="65" x2="236" y2="65" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="10" y="10" width="840" height="250" rx="10" fill="none" stroke="#c9cbc7" stroke-dasharray="4 4"/>
+      <text x="26" y="30" fill="#5b605d" font-size="11">local machine &middot; credentials never leave</text>
 
-      <rect x="246" y="20" width="400" height="230" rx="10" fill="none" stroke="#c9cbc7" stroke-dasharray="4 4"/>
-      <text x="262" y="40" fill="#5b605d" font-size="11">KalshiClient._request()</text>
-      <rect x="262" y="52" width="170" height="52" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
-      <text x="347" y="75" text-anchor="middle" fill="#2f9e6e" font-size="12">TokenBucket.acquire()</text>
-      <text x="347" y="92" text-anchor="middle" fill="#7a7f7b" font-size="10">continuous refill &middot; live limits</text>
-      <line x1="432" y1="78" x2="462" y2="78" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
-      <rect x="470" y="52" width="160" height="52" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
-      <text x="550" y="75" text-anchor="middle" fill="#2f9e6e" font-size="12">sign_request()</text>
-      <text x="550" y="92" text-anchor="middle" fill="#7a7f7b" font-size="10">RSA-PSS &middot; per attempt</text>
-      <path d="M550 104 V128" fill="none" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
-      <rect x="470" y="136" width="160" height="44" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
-      <text x="550" y="163" text-anchor="middle" fill="#1f2321" font-size="12">aiohttp request</text>
-      <path d="M470 158 H420" fill="none" stroke="#b0751c" stroke-width="1.5" marker-end="url(#ah)"/>
-      <rect x="262" y="136" width="150" height="44" rx="8" fill="#ffffff" stroke="#b0751c"/>
-      <text x="337" y="155" text-anchor="middle" fill="#b0751c" font-size="11">429 / 5xx / timeout</text>
-      <text x="337" y="170" text-anchor="middle" fill="#7a7f7b" font-size="10">backoff + jitter</text>
-      <path d="M337 136 V112" fill="none" stroke="#b0751c" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ah)"/>
-      <text x="262" y="204" fill="#7a7f7b" font-size="10">3rd failure &rarr; KalshiRetriesExhaustedError</text>
-      <text x="262" y="222" fill="#7a7f7b" font-size="10">400 / 404 &rarr; KalshiAPIError (no retry)</text>
-      <text x="262" y="240" fill="#7a7f7b" font-size="10">both subclass KalshiError</text>
-      <path d="M630 158 H690 V290" fill="none" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
-      <text x="698" y="230" fill="#7a7f7b" font-size="10">2xx</text>
+      <rect x="26" y="46" width="170" height="70" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
+      <text x="111" y="70" text-anchor="middle" fill="#1f2321" font-size="12">launchd &rarr; run_job</text>
+      <text x="111" y="88" text-anchor="middle" fill="#7a7f7b" font-size="10">hourly: trades, markets</text>
+      <text x="111" y="103" text-anchor="middle" fill="#7a7f7b" font-size="10">daily: snapshots, candles</text>
+      <line x1="196" y1="81" x2="226" y2="81" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
 
-      <rect x="560" y="300" width="280" height="76" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
-      <text x="700" y="324" text-anchor="middle" fill="#2f9e6e" font-size="12">BronzeWriter</text>
-      <text x="700" y="342" text-anchor="middle" fill="#5b605d" font-size="10">bronze/kalshi/{entity}/date=YYYY-MM-DD/</text>
-      <text x="700" y="358" text-anchor="middle" fill="#7a7f7b" font-size="10">data.jsonl &middot; + fetched_at, source</text>
-      <line x1="560" y1="338" x2="470" y2="338" stroke="#b8bbb7" stroke-dasharray="3 4"/>
-      <rect x="290" y="316" width="180" height="44" rx="8" fill="#f7f7f4" stroke="#c9cbc7"/>
-      <text x="380" y="335" text-anchor="middle" fill="#5b605d" font-size="11">data/state/</text>
-      <text x="380" y="351" text-anchor="middle" fill="#7a7f7b" font-size="10">checkpoints &middot; _SUCCESS</text>
-      <rect x="20" y="300" width="230" height="76" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
-      <text x="135" y="326" text-anchor="middle" fill="#2f9e6e" font-size="11">S3 &rarr; Databricks</text>
-      <text x="135" y="344" text-anchor="middle" fill="#7a7f7b" font-size="10">Bronze &rarr; Silver &middot; Delta Lake</text>
-      <text x="135" y="360" text-anchor="middle" fill="#7a7f7b" font-size="10">daily &middot; Airflow</text>
+      <rect x="234" y="46" width="180" height="70" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="324" y="70" text-anchor="middle" fill="#2f9e6e" font-size="12">bootstrap(job)</text>
+      <text x="324" y="88" text-anchor="middle" fill="#7a7f7b" font-size="10">validate settings &middot; flock</text>
+      <text x="324" y="103" text-anchor="middle" fill="#7a7f7b" font-size="10">exit 0 / 1 / 75 / 78</text>
+      <line x1="414" y1="81" x2="444" y2="81" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <rect x="452" y="46" width="380" height="70" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="642" y="70" text-anchor="middle" fill="#2f9e6e" font-size="12">KalshiClient &rarr; RetryPolicy &rarr; SharedTokenBucket</text>
+      <text x="642" y="88" text-anchor="middle" fill="#7a7f7b" font-size="10">RSA-PSS per attempt &middot; full-jitter backoff</text>
+      <text x="642" y="103" text-anchor="middle" fill="#7a7f7b" font-size="10">read | write buckets, one file lock across processes</text>
+      <path d="M642 116 V146" fill="none" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <rect x="452" y="154" width="380" height="88" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="642" y="176" text-anchor="middle" fill="#2f9e6e" font-size="12">BronzeWriter</text>
+      <text x="642" y="194" text-anchor="middle" fill="#5b605d" font-size="10">.inprogress-*.jsonl.gz &mdash;seal()&rarr; part-*.jsonl.gz</text>
+      <text x="642" y="210" text-anchor="middle" fill="#7a7f7b" font-size="10">gzip &middot; fsync &middot; atomic rename &middot; never modified</text>
+      <text x="642" y="226" text-anchor="middle" fill="#7a7f7b" font-size="10">bronze/{source}/{entity}/date=YYYY-MM-DD/</text>
+      <line x1="452" y1="198" x2="422" y2="198" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <rect x="234" y="166" width="180" height="64" rx="8" fill="#f7f7f4" stroke="#c9cbc7"/>
+      <text x="324" y="189" text-anchor="middle" fill="#5b605d" font-size="11">state/</text>
+      <text x="324" y="205" text-anchor="middle" fill="#7a7f7b" font-size="10">checkpoints &middot; cursors</text>
+      <text x="324" y="219" text-anchor="middle" fill="#7a7f7b" font-size="10">moved only after seal()</text>
+
+      <rect x="26" y="166" width="170" height="64" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
+      <text x="111" y="189" text-anchor="middle" fill="#1f2321" font-size="12">sync_bronze</text>
+      <text x="111" y="205" text-anchor="middle" fill="#7a7f7b" font-size="10">new parts only</text>
+      <text x="111" y="219" text-anchor="middle" fill="#7a7f7b" font-size="10">immutable &rarr; upload once</text>
+      <path d="M111 230 V296" fill="none" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+      <text x="120" y="270" fill="#7a7f7b" font-size="10">data, never keys</text>
+
+      <rect x="10" y="284" width="840" height="176" rx="10" fill="none" stroke="#c9cbc7" stroke-dasharray="4 4"/>
+      <text x="26" y="452" fill="#5b605d" font-size="11">Databricks Free Edition</text>
+
+      <rect x="26" y="304" width="170" height="64" rx="8" fill="#ffffff" stroke="#c9cbc7"/>
+      <text x="111" y="328" text-anchor="middle" fill="#1f2321" font-size="12">Volume bronze/</text>
+      <text x="111" y="346" text-anchor="middle" fill="#7a7f7b" font-size="10">mirror of part files</text>
+      <line x1="196" y1="336" x2="226" y2="336" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <rect x="234" y="304" width="180" height="64" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="324" y="328" text-anchor="middle" fill="#2f9e6e" font-size="12">COPY INTO raw_*</text>
+      <text x="324" y="346" text-anchor="middle" fill="#7a7f7b" font-size="10">each file loaded once</text>
+      <line x1="414" y1="336" x2="444" y2="336" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <rect x="452" y="304" width="180" height="64" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="542" y="328" text-anchor="middle" fill="#2f9e6e" font-size="12">MERGE &rarr; silver_*</text>
+      <text x="542" y="346" text-anchor="middle" fill="#7a7f7b" font-size="10">typed &middot; dq_reasons</text>
+      <text x="542" y="360" text-anchor="middle" fill="#7a7f7b" font-size="10">watermark moves last</text>
+      <line x1="632" y1="336" x2="662" y2="336" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#ah)"/>
+      <path d="M542 368 V398" fill="none" stroke="#b0751c" stroke-width="1.5" marker-end="url(#ah)"/>
+      <rect x="452" y="404" width="180" height="34" rx="8" fill="#ffffff" stroke="#b0751c"/>
+      <text x="542" y="425" text-anchor="middle" fill="#b0751c" font-size="11">quarantine</text>
+
+      <rect x="670" y="304" width="162" height="64" rx="8" fill="#ffffff" stroke="#2f9e6e"/>
+      <text x="751" y="328" text-anchor="middle" fill="#2f9e6e" font-size="12">gold_calibration</text>
+      <text x="751" y="346" text-anchor="middle" fill="#7a7f7b" font-size="10">point-in-time prices</text>
+      <text x="751" y="360" text-anchor="middle" fill="#7a7f7b" font-size="10">1 / 3 / 7 / 30 days out</text>
       </g>
     </svg>
   </div>
@@ -136,19 +161,19 @@
 <div id="pane-dec" class="pane">
   <div class="two">
     <div>
-      <p class="lede"><b>A hand-rolled token bucket.</b> Continuous refill, an <code>asyncio.Lock</code> held only around the check-and-decide step and released before any sleep, and a retry loop rather than recursion. Building it surfaced a self-deadlock from re-acquiring a non-reentrant lock and a double-release error. On startup the client reads the account's real limits and rebuilds the bucket, instead of trusting a guessed tier.</p>
-      <p class="lede" style="margin-top:16px;"><b>Retries live in one place.</b> Every endpoint is a thin wrapper over one request method that owns rate limiting, signing, and status-code branching. Exhausted retries raise instead of returning <code>None</code>, so a failure surfaces where it happened rather than as a <code>TypeError</code> three calls later. The signature is recomputed inside the retry loop because it embeds a timestamp.</p>
-      <p class="lede" style="margin-top:16px;"><b>Bronze is plain JSONL, partitioned by ingestion date.</b> Writing never has to inspect the payload to pick a file, and once a day passes its file is finished for good. A database was considered and rejected, including <a href="smalldb.html">SmallDB</a>: Bronze is written and read sequentially in full, with no key lookups for an LSM tree to speed up.</p>
+      <p class="lede"><b>Progress is never claimed before data is durable.</b> A job writes into a hidden in-progress file; <code>seal()</code> closes the gzip stream, fsyncs, renames it to its final name, and fsyncs the directory, and only then does a checkpoint move. A crash leaves at worst an unsealed file whose data was never checkpointed, so the rerun re-fetches it: duplicates are acceptable, gaps are not, and Silver dedupes.</p>
+      <p class="lede" style="margin-top:16px;"><b>Bronze files are immutable.</b> The first version appended to one file per day, which forced size checks during sync and once grew a single markets file to 43 GB raw. Sealed parts are never touched again, so sync uploads each one once and Databricks&rsquo; <code>COPY INTO</code> loads each one once, with no ledger of my own. A database was considered and rejected, including <a href="smalldb.html">SmallDB</a>: Bronze is written and read sequentially in full, with no key lookups for an LSM tree to speed up.</p>
+      <p class="lede" style="margin-top:16px;"><b>One rate limit, many processes.</b> Kalshi enforces separate read and write limits per account, so the token bucket lives in a file-locked state file that every job shares. Reconfiguring from the account&rsquo;s live limits clamps the tokens instead of refilling them, because another process may have just drained the bucket.</p>
     </div>
     <div>
-      <p class="lede"><b>Resuming after a crash, three ways.</b> Trades walk forward in one-hour windows with a checkpoint written only after the window is flushed to disk. The first version resumed from the newest stored timestamp and silently skipped data, because the API returns trades newest-first. One-shot historical jobs use completion markers; candlesticks use a set difference against what Bronze already holds.</p>
-      <p class="lede" style="margin-top:16px;"><b>Markets are state, trades are events.</b> "Everything after timestamp X" fully describes new trades, but a known market can move from closed to settled without being new. A timestamp cutoff would miss exactly the transitions the project cares about, so markets get a separate settlement worklist.</p>
+      <p class="lede"><b>Errors say what to do.</b> A 4xx means this item is bad, so skip it; a 401/403 means the whole job is misconfigured, so abort; exhausted retries skip one item, but 20 in a row mean Kalshi or the network is down, so the job stops instead of marking thousands of items failed. The client also validates filter values itself, because Kalshi silently ignores bad ones and turns a typo into a full pull.</p>
+      <p class="lede" style="margin-top:16px;"><b>Calibration without lookahead.</b> Kalshi overwrites a market&rsquo;s close time when it closes early, so the pipeline captures the scheduled close from observations made before close. Each horizon uses only the latest candle visible at its cutoff, results are reported per anchor type, standard errors are clustered by event so ten related markets don&rsquo;t count as ten samples, and edge is measured net of taker fees.</p>
     </div>
   </div>
 </div>
 
 </main>
 
-<script src="../assets/site.js?v=20261012-2"></script>
+<script src="../assets/site.js?v=20261014"></script>
 </body>
 </html>
